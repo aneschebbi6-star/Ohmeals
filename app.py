@@ -5,7 +5,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 import random
 import string
+import time
 
+# ---------------------------
+# Flask app
+# ---------------------------
 app = Flask(__name__)
 app.secret_key = "secret123"
 
@@ -17,7 +21,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # ---------------------------
-# Flask-login
+# Flask-Login
 # ---------------------------
 login_manager = LoginManager()
 login_manager.login_view = "login"
@@ -36,28 +40,27 @@ app.config['MAIL_DEFAULT_SENDER'] = 'aneschebbi6@gmail.com'
 mail = Mail(app)
 
 # ---------------------------
-# User Model
+# Admin Model
 # ---------------------------
 
 
-class User(UserMixin, db.Model):
+class Admin(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    reset_code = db.Column(db.String(5), nullable=True)  # Code temporaire
+    password = db.Column(db.String(200), nullable=False)
+    reset_code = db.Column(db.String(5), nullable=True)
+    last_code_time = db.Column(db.Integer, nullable=True)  # timestamp dernier code
 
 
 # ---------------------------
-# Créer DB et compte admin
+# Création DB et admin initial
 # ---------------------------
 with app.app_context():
     db.create_all()
-    if not User.query.filter_by(username='anes').first():
-        admin = User(
-            username='anes',
-            password=generate_password_hash('anes123'),
-            email='aneschebbi6@gmail.com'
+    if not Admin.query.filter_by(email='aneschebbi6@gmail.com').first():
+        admin = Admin(
+            email='aneschebbi6@gmail.com',
+            password=generate_password_hash('anes123')
         )
         db.session.add(admin)
         db.session.commit()
@@ -69,7 +72,7 @@ with app.app_context():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return Admin.query.get(int(user_id))
 
 # ---------------------------
 # Routes publiques
@@ -96,18 +99,18 @@ def book():
     return render_template('book.html')
 
 # ---------------------------
-# Login
+# Login / Logout
 # ---------------------------
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        email = request.form['email']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            login_user(user)
+        admin = Admin.query.filter_by(email=email).first()
+        if admin and check_password_hash(admin.password, password):
+            login_user(admin)
             return redirect(url_for('dashboard'))
         return render_template('login.html', error="Login incorrect")
     return render_template('login.html')
@@ -125,64 +128,10 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
 # ---------------------------
-# Forgot Password AJAX
+# Mot de passe oublié
 # ---------------------------
 
-# @app.route('/forgot-password', methods=['GET', 'POST'])
-# def forgot_password():
-#     if request.method == 'POST':
-#         email = request.form.get('email')
-#         code = request.form.get('code')
-#         new_password = request.form.get('new_password')
-
-#         user = User.query.filter_by(email=email).first()
-#         if not user:
-#             return "EMAIL_NOT_FOUND"
-
-#         # Étape 1 : envoyer le code
-#         if email and not code and not new_password:
-#             code_generated = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
-#             user.reset_code = code_generated
-#             user.code_timestamp = datetime.utcnow()  # Ajouter timestamp pour limiter renvoi
-#             db.session.commit()
-
-#             # Envoyer email
-#             msg = Message(
-#                 subject="Code de réinitialisation",
-#                 recipients=[email],
-#                 body=f"Bonjour {user.username},\n\nVotre code de réinitialisation est : {code_generated}\n\nMerci."
-#             )
-#             mail.send(msg)
-#             return "CODE_SENT"
-
-#         # Étape 2 : vérifier le code
-#         if email and code and not new_password:
-#             if code != user.reset_code:
-#                 return "CODE_INCORRECT"
-#             else:
-#                 return "CODE_CORRECT"
-
-#         # Étape 3 : changer le mot de passe
-#         if email and code and new_password:
-#             if code != user.reset_code:
-#                 return "CODE_INCORRECT"
-
-#             # Validation mot de passe : lettres + chiffres, >= 5 caractères
-#             if len(new_password) < 5 or not any(c.isalpha() for c in new_password) or not any(c.isdigit() for c in new_password):
-#                 return "PASSWORD_INVALID"
-
-#             # Changer mot de passe
-#             user.password = generate_password_hash(new_password)
-#             user.reset_code = None
-#             db.session.commit()
-
-#             # Afficher page password_changed.html immédiatement
-#             return render_template('password_changed.html')
-
-#     # GET : afficher page forgot_password
-#     return render_template('forgot_password.html')
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
@@ -191,61 +140,76 @@ def forgot_password():
         code = request.form.get('code')
         new_password = request.form.get('new_password')
 
-        user = User.query.filter_by(email=email).first()
-        if not user:
+        admin = Admin.query.filter_by(email=email).first()
+        if not admin:
             return "EMAIL_NOT_FOUND"
 
-        # -------------------
         # Étape 1 : envoyer le code
-        # -------------------
         if email and not code and not new_password:
-            import time
             now = int(time.time())
-            # Stocker le timestamp du dernier envoi dans l'utilisateur si pas déjà fait
-            if hasattr(user, 'last_code_time') and now - user.last_code_time < 60:
+            if admin.last_code_time and now - admin.last_code_time < 60:
                 return "WAIT_1_MIN"
 
             code_generated = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
-            user.reset_code = code_generated
-            # Ajouter un attribut temporaire pour le timestamp
-            user.last_code_time = now
+            admin.reset_code = code_generated
+            admin.last_code_time = now
             db.session.commit()
 
-            # Envoyer email
             msg = Message(
                 subject="Code de réinitialisation",
                 recipients=[email],
-                body=f"Bonjour {user.username},\n\nVotre code de réinitialisation est : {code_generated}\n\nMerci."
+                body=f"Bonjour,\n\nVotre code de réinitialisation est : {code_generated}\n\nMerci."
             )
             mail.send(msg)
             return "CODE_SENT"
 
-        # -------------------
         # Étape 2 : vérifier le code
-        # -------------------
         if email and code and not new_password:
-            if code != user.reset_code:
+            if code != admin.reset_code:
                 return "CODE_INCORRECT"
             return "CODE_CORRECT"
 
-        # -------------------
         # Étape 3 : changer le mot de passe
-        # -------------------
         if email and code and new_password:
-            if code != user.reset_code:
+            if code != admin.reset_code:
                 return "CODE_INCORRECT"
 
-            # Validation côté serveur : lettres + chiffres + >=5 caractères
             if len(new_password) < 5 or not any(c.isalpha() for c in new_password) or not any(c.isdigit() for c in new_password):
                 return "PASSWORD_INVALID"
 
-            user.password = generate_password_hash(new_password)
-            user.reset_code = None
+            # Vérification : mot de passe différent de l'ancien
+            if check_password_hash(admin.password, new_password):
+                return "PASSWORD_SAME_AS_OLD"
+
+            admin.password = generate_password_hash(new_password)
+            admin.reset_code = None
+            admin.last_code_time = None
             db.session.commit()
             return "PASSWORD_CHANGED"
 
-    # GET : afficher la page forgot_password
     return render_template('forgot_password.html')
+
+# ---------------------------
+# Ajouter un nouvel admin
+# ---------------------------
+
+
+@app.route('/add-admin', methods=['GET', 'POST'])
+@login_required
+def add_admin():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        if Admin.query.filter_by(email=email).first():
+            return "ADMIN_EXISTS"
+        new_admin = Admin(
+            email=email,
+            password=generate_password_hash(password)
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+        return "ADMIN_ADDED"
+    return render_template('add_admin.html')
 
 
 # ---------------------------
