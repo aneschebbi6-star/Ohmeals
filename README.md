@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # OHMEALS - Traiteur Marocain
 
 ## Introduction
@@ -79,10 +80,73 @@ OHMEALS/
 ├── app.py
 ├── models.py (à compléter)
 └── requirements.txt
+=======
+# OHMEALS - Traiteur Marocain 🇲🇦
+
+Application web pour un traiteur marocain, construite avec **Flask MVC** et **Bootstrap 5**.
+
+---
+
+## 🛠️ Technologies
+
+| Composant | Technologie |
+|-----------|-------------|
+| Backend | Python 3.11+, Flask 2.x, SQLAlchemy |
+| Frontend Public | Bootstrap 5, Jinja2 |
+| Dashboard Admin | React 18+ |
+| Base de données | SQLite |
+
+---
+
+## 📁 Architecture du Projet (MVC)
+
+```
+OHMEALS/
+├── app/                          # 📦 Package Flask principal
+│   ├── __init__.py               # Application Factory
+│   ├── config.py                 # Configurations (Dev/Prod)
+│   ├── extensions.py             # SQLAlchemy, LoginManager, Mail
+│   ├── models/                   # 🗃️ Model (M)
+│   │   ├── admin.py              # Modèle Admin/User
+│   │   ├── product.py            # Modèle Product
+│   │   └── order.py              # Modèles Order + OrderItem
+│   └── controllers/              # 🎮 Controller (C)
+│       ├── page_controller.py    # Routes: /, /about
+│       ├── auth_controller.py    # Routes: /login, /logout
+│       ├── menu_controller.py    # Routes: /menu, /book
+│       └── api_controller.py     # API REST: /api/*
+│
+├── templates/                    # 🎨 View (V) - Jinja2 + Bootstrap
+│   ├── index.html
+│   ├── about.html
+│   ├── menu.html
+│   ├── book.html
+│   ├── login.html
+│   ├── forgot_password.html
+│   └── dashboard/
+│       └── dashboard.html        # Dashboard React
+│
+├── static/                       # 📂 Assets
+│   ├── css/
+│   ├── js/
+│   ├── fonts/
+│   └── images/
+│
+├── scripts/                      # 🔧 Scripts utilitaires
+│   └── init_db.py
+│
+├── instance/                     # 🗄️ Base de données
+│   └── ohmeals.db
+│
+├── run.py                        # 🚀 Point d'entrée
+├── requirements.txt              # 📋 Dépendances
+└── README.md
+>>>>>>> 303c522 (Refactor complet OHMEALS : nouvelles pages, dossiers et JS mis à jour)
 ```
 
 ---
 
+<<<<<<< HEAD
 ## ✅ Fonctionnalités déjà faites
 
 - Template Bootstrap 5 adapté ✓
@@ -211,11 +275,93 @@ OHMEALS/
 | Snack        | kilo     | 20 DT / kilo      | Prix × quantité (kg) |
 | Snack        | pièce    | 2 DT / pièce      | Prix × nombre pièces |
 | Plat         | personne | 30 DT / personne  | Prix × nombre pers.  |
+=======
+## 🚀 Démarrage Rapide
+
+```bash
+# 1. Installer les dépendances
+pip install -r requirements.txt
+
+# 2. Lancer l'application
+python run.py
+
+# 3. Accéder à http://127.0.0.1:5000
+```
+
+### 🔐 Identifiants Admin
+| Champ | Valeur |
+|-------|--------|
+| Username | `anes` |
+| Password | `anes123` |
+
+---
+
+## 📊 Logique Métier
+
+### Unités de vente
+
+| Type | Unité | Exemple | Calcul |
+|------|-------|---------|--------|
+| Snack | kilo | 20 DT/kg | Prix × kg |
+| Snack | pièce | 2 DT/pièce | Prix × quantité |
+| Plat | personne | 30 DT/pers | Prix × personnes |
+
+---
+
+## 🔌 API REST
+
+| Endpoint | Méthodes | Description |
+|----------|----------|-------------|
+| `/api/products` | GET, POST | Liste/Créer produits |
+| `/api/products/<id>` | PUT, DELETE | Modifier/Supprimer |
+| `/api/orders` | GET, POST | Liste/Créer commandes |
+| `/api/orders/<id>` | PUT, DELETE | Modifier/Supprimer |
+| `/api/admins` | GET, POST | Liste/Créer admins |
+| `/api/stats` | GET | Statistiques |
+
+---
+
+## 🧠 Modèles de Données
+
+### Admin
+```
+id, username, email, password, reset_code
+```
+
+### Product
+```
+id, name, description, category, unit, price, image, is_active
+```
+
+### Order
+```
+id, customer_name, customer_phone, customer_email, delivery_address, total_price, status, created_at
+```
+
+### OrderItem
+```
+id, order_id, product_id, quantity, unit, price
+```
+
+---
+
+## ✅ Fonctionnalités
+
+- [x] Architecture MVC avec Blueprints
+- [x] Application Factory pattern
+- [x] API REST pour React Dashboard
+- [x] Authentification admin
+- [x] Templates Bootstrap 5 dynamiques
+- [x] Dashboard React intégré
+- [x] Gestion produits (CRUD)
+- [x] Gestion commandes (CRUD)
+>>>>>>> 303c522 (Refactor complet OHMEALS : nouvelles pages, dossiers et JS mis à jour)
 
 ---
 
 ## 📞 Contact
 
+<<<<<<< HEAD
 - Contribuer : créer une pull request
 - Signaler un bug : ouvrir une issue
 
@@ -228,3 +374,11 @@ Priorité actuelle :
 3️⃣ Créer le dashboard complet avec React.
 
 Une fois ces étapes faites, le reste (calcul des prix, sécurisation, tests) sera beaucoup plus simple.
+=======
+- **Contribuer** : créer une pull request
+- **Bug** : ouvrir une issue
+
+---
+
+*Built with ❤️ by ANES*
+>>>>>>> 303c522 (Refactor complet OHMEALS : nouvelles pages, dossiers et JS mis à jour)

@@ -1,5 +1,36 @@
-instance/
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual Environment
 venv/
 env/
+.venv/
+
+# Flask
+instance/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+
+# Archive (old files)
+archive/
+
+# Node (React Dashboard)
+node_modules/
+build/
+dist/

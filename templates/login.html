@@ -123,7 +123,7 @@
 
   <body>
     <div class="login-box">
-      <form method="POST" id="loginForm" action="{{ url_for('login') }}">
+      <form method="POST" id="loginForm" action="{{ url_for('auth.login') }}">
         <h2>Login</h2>
 
         <!-- USERNAME -->
@@ -166,7 +166,7 @@
           />
           <label class="form-check-label" for="rememberMe"> Remember Me </label>
           <p class="text-center mt-3">
-            <a href="{{ url_for('forgot_password') }}">Mot de passe oublié ?</a>
+            <a href="{{ url_for('auth.forgot_password') }}">Mot de passe oublié ?</a>
           </p>
         </div>
 
@@ -204,7 +204,7 @@
           </div>
           <div class="col-md-4 footer-col">
             <div class="footer_detail">
-              <a href="{{ url_for('index') }}" class="footer-logo">Feane</a>
+              <a href="{{ url_for('page.index') }}" class="footer-logo">Feane</a>
               <p>
                 Necessary, making this the first true generator on the Internet.
                 It uses a dictionary of over 200 Latin words, combined with

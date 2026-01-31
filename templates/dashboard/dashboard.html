@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OHMEALS - Admin Complet (Flask + React)</title>
+
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* --- STYLE ORIGINAL CONSERVÉ --- */
+      :root {
+        /* PALETTE NOIR & JAUNE */
+        --bg-main: #121212;
+        --bg-card: #1e1e1e;
+        --accent: #cba719; /* Jaune Moutarde */
+        --accent-hover: #bf9619;
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --border: #374151;
+        --danger: #992e2e;
+        --success: #258968;
+        --warning: #d97706;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        height: 100vh;
+      }
+      .sidebar {
+        width: 260px;
+        background-color: var(--bg-card);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+      }
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--bg-main);
+        overflow: hidden;
+      }
+
+      /* UI COMPONENTS */
+      .logo-area {
+        padding: 0 24px 24px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      .logo-icon {
+        color: var(--accent);
+      }
+
+      .nav-item {
+        padding: 12px 24px;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95rem;
+        border-left: 3px solid transparent;
+      }
+      .nav-item:hover {
+        background-color: rgba(250, 204, 21, 0.05);
+        color: var(--text-main);
+      }
+      .nav-item.active {
+        background: linear-gradient(
+          90deg,
+          rgba(250, 204, 21, 0.1) 0%,
+          transparent 100%
+        );
+        color: var(--accent);
+        border-left-color: var(--accent);
+      }
+
+      .header {
+        height: 64px;
+        background-color: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+
+      .content-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+      }
+
+      .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      /* BUTTONS & INPUTS */
+      .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background-color: var(--accent);
+        color: #000;
+      }
+      .btn-primary:hover {
+        background-color: var(--accent-hover);
+      }
+      .btn-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+      }
+      .btn-danger:hover {
+        background-color: var(--danger);
+        color: white;
+      }
+      .btn-edit {
+        background-color: #374151;
+        color: var(--text-main);
+      }
+      .btn-edit:hover {
+        background-color: #4b5563;
+      }
+
+      .input-group {
+        margin-bottom: 16px;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+      .input-control {
+        width: 100%;
+        background-color: #0f0f0f;
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+      }
+      .input-control:focus {
+        outline: 1px solid var(--accent);
+        border-color: var(--accent);
+      }
+      textarea.input-control {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      /* TABLES */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        text-align: left;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 12px;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        border-bottom: 1px solid #2a2a2a;
+        vertical-align: middle;
+      }
+      tr:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+
+      /* MODAL */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        backdrop-filter: blur(2px);
+      }
+      .modal {
+        background: var(--bg-card);
+        width: 100%;
+        max-width: 500px;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 20px 25 -5px rgba(0, 0, 0, 0.5);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      /* UTILS */
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .mb-20 {
+        margin-bottom: 20px;
+      }
+      .mt-10 {
+        margin-top: 10px;
+      }
+
+      /* STYLES SUPPLÉMENTAIRES POUR LES IMAGES */
+      .product-thumb {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .preview-container {
+        width: 100%;
+        height: 150px;
+        background-color: #0f0f0f;
+        border: 1px dashed var(--border);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .preview-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .badge-success {
+        background-color: rgba(37, 137, 104, 0.2);
+        color: var(--success);
+      }
+      .badge-warning {
+        background-color: rgba(217, 119, 6, 0.2);
+        color: var(--warning);
+      }
+      .badge-danger {
+        background-color: rgba(153, 46, 46, 0.2);
+        color: var(--danger);
+      }
+      .badge-default {
+        background-color: rgba(156, 163, 175, 0.2);
+        color: var(--text-muted);
+      }
+
+      .loading-spinner {
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-left-color: var(--accent);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 50px auto;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+                  {% raw %}
+                  const { useState, useEffect, useMemo } = React;
+
+                  // --- UTILITAIRES API ---
+                  const API_URL = "/api";
+
+                  const apiRequest = async (endpoint, method = "GET", body = null) => {
+                    const options = {
+                      method,
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    };
+                    if (body) {
+                      options.body = JSON.stringify(body);
+                    }
+
+                    try {
+                      const response = await fetch(`${API_URL}${endpoint}`, options);
+                      if (!response.ok) {
+                        throw new Error(`Erreur HTTP: ${response.status}`);
+                      }
+                      if (response.status === 204) return null;
+                      return await response.json();
+                    } catch (error) {
+                      console.error("API Error:", error);
+                      alert("Une erreur est survenue lors de la communication avec le serveur.");
+                      return null;
+                    }
+                  };
+
+                  // --- COMPOSANTS ---
+
+                  const Sidebar = ({ activeView, setView }) => {
+                    const menuItems = [
+                      { id: "dashboard", label: "Dashboard", icon: "fa-chart-pie" },
+                      { id: "orders", label: "Commandes", icon: "fa-shopping-basket" },
+                      { id: "products", label: "Produits", icon: "fa-box-open" },
+                      { id: "admins", label: "Administrateurs", icon: "fa-users-cog" },
+                    ];
+
+                    return (
+                      <div className="sidebar">
+                        <div className="logo-area">
+                          <i className="fas fa-utensils logo-icon"></i>
+                          <span>OHMEALS</span>
+                        </div>
+                        <nav>
+                          {menuItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className={`nav-item ${
+                                activeView === item.id ? "active" : ""
+                              }`}
+                              onClick={() => setView(item.id)}
+                            >
+                              <i className={`fas ${item.icon}`}></i>
+                              {item.label}
+                            </div>
+                          ))}
+                        </nav>
+                      </div>
+                    );
+                  };
+
+                  const Modal = ({ onClose, title, children }) => (
+                    <div className="modal-overlay" onClick={onClose}>
+                      <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex-between mb-20">
+                          <h3 style={{ color: "var(--text-main)" }}>{title}</h3>
+                          <i
+                            className="fas fa-times"
+                            style={{ cursor: "pointer", color: "var(--text-muted)" }}
+                            onClick={onClose}
+                          ></i>
+                        </div>
+                        {children}
+                      </div>
+                    </div>
+                  );
+
+                  // --- 1. GESTION PRODUITS ---
+                  const ProductManager = ({ products, setProducts }) => {
+                    const [isModalOpen, setIsModalOpen] = useState(false);
+                    const [editingProduct, setEditingProduct] = useState(null);
+                    const [formData, setFormData] = useState({
+                      name: "",
+                      category: "snack",
+                      unit: "kilo",
+                      price: "",
+                      image: "",
+                    });
+                    const [sortType, setSortType] = useState("default");
+
+                    const refreshProducts = async () => {
+                      const data = await apiRequest("/products");
+                      if (data) setProducts(data);
+                    };
+
+                    const handleOpenModal = (product = null) => {
+                      if (product) {
+                        setEditingProduct(product);
+                        setFormData(product);
+                      } else {
+                        setEditingProduct(null);
+                        setFormData({
+                          name: "",
+                          category: "snack",
+                          unit: "kilo",
+                          price: "",
+                          image: "",
+                        });
+                      }
+                      setIsModalOpen(true);
+                    };
+
+                    const handleImageUpload = (e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setFormData({ ...formData, image: reader.result });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    };
+
+                    const handleSubmit = async (e) => {
+                      e.preventDefault();
+                      const payload = {
+                        ...formData,
+                        price: parseFloat(formData.price),
+                        is_active: true
+                      };
+
+                      if (editingProduct) {
+                        await apiRequest(`/products/${editingProduct.id}`, "PUT", payload);
+                      } else {
+                        await apiRequest("/products", "POST", payload);
+                      }
+
+                      setIsModalOpen(false);
+                      refreshProducts();
+                    };
+
+                    const handleDelete = async (id) => {
+                      if (window.confirm("Supprimer ce produit ?")) {
+                        await apiRequest(`/products/${id}`, "DELETE");
+                        refreshProducts();
+                      }
+                    };
+
+                    const updateUnit = (cat) => {
+                      setFormData({
+                        ...formData,
+                        category: cat,
+                        unit: cat === "plat" ? "personne" : "kilo",
+                      });
+                    };
+
+                    const sortedProducts = useMemo(() => {
+                      let data = [...products];
+                      if (sortType === "price_asc") data.sort((a, b) => a.price - b.price);
+                      if (sortType === "price_desc") data.sort((a, b) => b.price - a.price);
+                      return data;
+                    }, [products, sortType]);
+
+                    return (
+                      <div>
+                        <div className="flex-between mb-20">
+                          <h2>Gestion Produits</h2>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => handleOpenModal()}
+                          >
+                            <i className="fas fa-plus"></i> Ajouter
+                          </button>
+                        </div>
+
+                        <div className="card">
+                          <div
+                            style={{ display: "flex", gap: "10px", marginBottom: "15px" }}
+                          >
+                            <select
+                              className="input-control"
+                              style={{ maxWidth: "200px" }}
+                              onChange={(e) => setSortType(e.target.value)}
+                            >
+                              <option value="default">Trier par défaut</option>
+                              <option value="price_asc">Prix (Croissant)</option>
+                              <option value="price_desc">Prix (Décroissant)</option>
+                            </select>
+                          </div>
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Image</th>
+                                <th>Produit</th>
+                                <th>Catégorie</th>
+                                <th>Unité</th>
+                                <th>Prix (DT)</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedProducts.map((p) => (
+                                <tr key={p.id}>
+                                  <td>
+                                    {p.image ? (
+                                      <img src={p.image} alt={p.name} className="product-thumb" />
+                                    ) : (
+                                      <div className="product-thumb" style={{background:'#333'}}></div>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <strong>{p.name}</strong>
+                                  </td>
+                                  <td>
+                                    <span className={`badge badge-default`}>
+                                      {(p.category || "").toUpperCase()}
+                                    </span>
+                                  </td>
+                                  <td>{p.unit}</td>
+                                  <td
+                                    style={{ color: "var(--accent)", fontWeight: "bold" }}
+                                  >
+                                    {p.price} DT
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="btn btn-edit"
+                                      style={{ padding: "4px 8px" }}
+                                      onClick={() => handleOpenModal(p)}
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button
+                                      className="btn btn-danger"
+                                      style={{ padding: "4px 8px", marginLeft: "5px" }}
+                                      onClick={() => handleDelete(p.id)}
+                                    >
+                                      <i className="fas fa-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {isModalOpen && (
+                          <Modal
+                            onClose={() => setIsModalOpen(false)}
+                            title={editingProduct ? "Modifier Produit" : "Ajouter Produit"}
+                          >
+                            <form onSubmit={handleSubmit}>
+                              <div className="input-group">
+                                <label>Image du produit</label>
+                                <input
+                                  type="file"
+                                  className="input-control"
+                                  accept="image/*"
+                                  onChange={handleImageUpload}
+                                />
+                                {formData.image && (
+                                  <div className="preview-container">
+                                    <img src={formData.image} alt="Aperçu" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="input-group">
+                                <label>Nom</label>
+                                <input
+                                  className="input-control"
+                                  required
+                                  value={formData.name}
+                                  onChange={(e) =>
+                                    setFormData({ ...formData, name: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="input-group">
+                                <label>Catégorie</label>
+                                <select
+                                  className="input-control"
+                                  value={formData.category}
+                                  onChange={(e) => updateUnit(e.target.value)}
+                                >
+                                  <option value="snack">Snack</option>
+                                  <option value="plat">Plat</option>
+                                </select>
+                              </div>
+                              <div className="input-group">
+                                <label>Unité</label>
+                                <input
+                                  className="input-control"
+                                  value={formData.unit}
+                                  disabled
+                                  style={{ opacity: 0.7 }}
+                                />
+                              </div>
+                              <div className="input-group">
+                                <label>Prix (DT)</label>
+                                <input
+                                  type="number"
+                                  className="input-control"
+                                  required
+                                  value={formData.price}
+                                  onChange={(e) =>
+                                    setFormData({ ...formData, price: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ width: "100%" }}
+                              >
+                                {editingProduct ? "Modifier" : "Créer"}
+                              </button>
+                            </form>
+                          </Modal>
+                        )}
+                      </div>
+                    );
+                  };
+
+                 // --- 2. GESTION VILLES ---
+      const CityManager = ({ cities, setCities }) => {
+        const [isModalOpen, setIsModalOpen] = React.useState(false);
+        const [editingCity, setEditingCity] = React.useState(null);
+        const [formData, setFormData] = React.useState({ name: "", delivery_fee: "" });
+
+        const refreshCities = async () => {
+          const data = await apiRequest("/cities");
+          if (data) setCities(data);
+        };
+
+        const handleOpenModal = (city = null) => {
+          if (city) {
+            setEditingCity(city);
+            setFormData({ name: city.name, delivery_fee: city.delivery_fee });
+          } else {
+            setEditingCity(null);
+            setFormData({ name: "", delivery_fee: "" });
+          }
+          setIsModalOpen(true);
+        };
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          const payload = {
+            name: formData.name,
+            delivery_fee: parseFloat(formData.delivery_fee),
+            is_active: true,
+          };
+
+          if (editingCity) {
+            await apiRequest(`/cities/${editingCity.id}`, "PUT", payload);
+          } else {
+            await apiRequest("/cities", "POST", payload);
+          }
+          setIsModalOpen(false);
+          refreshCities();
+        };
+
+        const handleDelete = async (id) => {
+          if (window.confirm("Supprimer cette ville ?")) {
+            await apiRequest(`/cities/${id}`, "DELETE");
+            refreshCities();
+          }
+        };
+
+        return (
+          <div>
+            <div className="flex-between mb-20">
+              <h2>Gestion Villes</h2>
+              <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+                <i className="fas fa-plus"></i> Ajouter
+              </button>
+            </div>
+
+            <div className="card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ville</th>
+                    <th>Frais (DT)</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cities.map((c) => (
+                    <tr key={c.id}>
+                      <td>{c.name}</td>
+                      <td>{c.delivery_fee} DT</td>
+                      <td>
+                        <span style={{ color: "var(--success)" }}>
+                          {c.is_active !== undefined
+                            ? c.is_active
+                              ? "Actif"
+                              : "Inactif"
+                            : c.isActive
+                            ? "Actif"
+                            : "Inactif"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-edit"
+                          onClick={() => handleOpenModal(c)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: "4px 8px", marginLeft: "5px" }}
+                          onClick={() => handleDelete(c.id)}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {isModalOpen && (
+              <Modal
+                onClose={() => setIsModalOpen(false)}
+                title={editingCity ? "Modifier Ville" : "Ajouter Ville"}
+              >
+                <form onSubmit={handleSubmit}>
+                  <div className="input-group">
+                    <label>Nom de la ville</label>
+                    <input
+                      className="input-control"
+                      required
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Frais de livraison (DT)</label>
+                    <input
+                      type="number"
+                      className="input-control"
+                      required
+                      value={formData.delivery_fee}
+                      onChange={(e) =>
+                        setFormData({ ...formData, delivery_fee: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ width: "100%" }}
+                  >
+                    {editingCity ? "Modifier" : "Créer"}
+                  </button>
+                </form>
+              </Modal>
+            )}
+          </div>
+        );
+      };
+
+
+                  // --- 3. GESTION COMMANDES ---
+                  const OrderManager = ({ orders, setOrders, cities }) => {
+                    const [isModalOpen, setIsModalOpen] = useState(false);
+                    const [editingOrder, setEditingOrder] = useState(null);
+                    const [sortType, setSortType] = useState("default");
+                    const [formData, setFormData] = useState({
+                      customer_name: "",
+                      customer_phone: "",
+                      customer_email: "",
+                      delivery_address: "",
+                      total: "",
+                      city_id: "",
+                      status: "En attente",
+                    });
+
+                    const refreshOrders = async () => {
+                        const data = await apiRequest("/orders");
+                        if(data) setOrders(data);
+                    }
+
+                    const resetForm = () => ({
+                      customer_name: "",
+                      customer_phone: "",
+                      customer_email: "",
+                      delivery_address: "",
+                      total: "",
+                      city_id: "",
+                      status: "En attente",
+                    });
+
+                    const handleOpenModal = (order = null) => {
+                      if (order) {
+                        setEditingOrder(order);
+                        setFormData({
+                          ...order,
+                          city_id: order.city_id || "",
+                        });
+                      } else {
+                        setEditingOrder(null);
+                        setFormData(resetForm());
+                      }
+                      setIsModalOpen(true);
+                    };
+
+                    const handleSubmit = async (e) => {
+                      e.preventDefault();
+                      const payload = {
+                        ...formData,
+                        total: parseFloat(formData.total),
+                      };
+
+                      if (editingOrder) {
+                        await apiRequest(`/orders/${editingOrder.id}`, "PUT", payload);
+                      } else {
+                        await apiRequest("/orders", "POST", payload);
+                      }
+
+                      setIsModalOpen(false);
+                      refreshOrders();
+                    };
+
+                    const handleDelete = async (id) => {
+                      if (window.confirm("Supprimer cette commande ?")) {
+                        await apiRequest(`/orders/${id}`, "DELETE");
+                        refreshOrders();
+                      }
+                    };
+
+                    const sortedOrders = useMemo(() => {
+                      let data = [...orders];
+                      if (sortType === "price_asc") data.sort((a, b) => a.total - b.total);
+                      if (sortType === "price_desc") data.sort((a, b) => b.total - a.total);
+                      return data;
+                    }, [orders, sortType]);
+
+                    const getStatusBadge = (status) => {
+                      let cls = "badge-default";
+                      if (status === "Livré") cls = "badge-success";
+                      if (status === "En attente") cls = "badge-warning";
+                      if (status === "Annulé") cls = "badge-danger";
+                      return <span className={`badge ${cls}`}>{status}</span>;
+                    };
+
+                    return (
+                      <div>
+                        <div className="flex-between mb-20">
+                          <h2>Liste des Commandes</h2>
+                          <div style={{ display: "flex", gap: "10px" }}>
+                            <select
+                              className="input-control"
+                              style={{ maxWidth: "200px" }}
+                              onChange={(e) => setSortType(e.target.value)}
+                            >
+                              <option value="default">Trier par défaut</option>
+                              <option value="price_asc">Montant (Croissant)</option>
+                              <option value="price_desc">Montant (Décroissant)</option>
+                            </select>
+                            <button
+                              className="btn btn-primary"
+                              onClick={() => handleOpenModal()}
+                            >
+                              <i className="fas fa-plus"></i> Nouvelle
+                            </button>
+                          </div>
+                        </div>
+                        <div className="card">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Client</th>
+                                <th>Téléphone</th>
+                                <th>Ville</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedOrders.map((o) => (
+                                <tr key={o.id}>
+                                  <td>
+                                    <strong>{o.customer_name}</strong>
+                                    <div
+                                      style={{
+                                        fontSize: "0.8rem",
+                                        color: "var(--text-muted)",
+                                      }}
+                                    >
+                                      {o.delivery_address}
+                                    </div>
+                                  </td>
+                                  <td>{o.customer_phone}</td>
+                                  <td>{o.city_name || (o.city ? o.city.name : "Inconnu")}</td>
+                                  <td
+                                    style={{ color: "var(--accent)", fontWeight: "bold" }}
+                                  >
+                                    {o.total} DT
+                                  </td>
+                                  <td>{getStatusBadge(o.status)}</td>
+                                  <td>
+                                    <button
+                                      className="btn btn-edit"
+                                      style={{ padding: "4px 8px" }}
+                                      onClick={() => handleOpenModal(o)}
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button
+                                      className="btn btn-danger"
+                                      style={{ padding: "4px 8px", marginLeft: "5px" }}
+                                      onClick={() => handleDelete(o.id)}
+                                    >
+                                      <i className="fas fa-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {isModalOpen && (
+                          <Modal
+                            onClose={() => setIsModalOpen(false)}
+                            title={
+                              editingOrder ? "Modifier Commande" : "Créer une Commande"
+                            }
+                          >
+                            <form onSubmit={handleSubmit}>
+                              <div className="input-group">
+                                <label>Nom du Client</label>
+                                <input
+                                  type="text"
+                                  className="input-control"
+                                  required
+                                  value={formData.customer_name}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      customer_name: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="input-group">
+                                <label>Téléphone</label>
+                                <input
+                                  type="text"
+                                  className="input-control"
+                                  required
+                                  value={formData.customer_phone}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      customer_phone: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="input-group">
+                                <label>Email</label>
+                                <input
+                                  type="email"
+                                  className="input-control"
+                                  value={formData.customer_email}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      customer_email: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="input-group">
+                                <label>Adresse de Livraison</label>
+                                <textarea
+                                  className="input-control"
+                                  required
+                                  value={formData.delivery_address}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      delivery_address: e.target.value,
+                                    })
+                                  }
+                                  placeholder="Rue, Quartier, Code postal..."
+                                ></textarea>
+                              </div>
+                              <div style={{ display: "flex", gap: "10px" }}>
+                                <div className="input-group" style={{ flex: 1 }}>
+                                  <label>Ville</label>
+                                  <select
+                                    className="input-control"
+                                    required
+                                    value={formData.city_id}
+                                    onChange={(e) =>
+                                      setFormData({ ...formData, city_id: e.target.value })
+                                    }
+                                  >
+                                    <option value="">Sélectionner...</option>
+                                    {cities.map((c) => (
+                                      <option key={c.id} value={c.id}>
+                                        {c.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="input-group" style={{ flex: 1 }}>
+                                  <label>Montant Total (DT)</label>
+                                  <input
+                                    type="number"
+                                    className="input-control"
+                                    required
+                                    value={formData.total}
+                                    onChange={(e) =>
+                                      setFormData({ ...formData, total: e.target.value })
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div className="input-group">
+                                <label>Statut</label>
+                                <select
+                                  className="input-control"
+                                  value={formData.status}
+                                  onChange={(e) =>
+                                    setFormData({ ...formData, status: e.target.value })
+                                  }
+                                >
+                                  <option value="En attente">En attente</option>
+                                  <option value="En préparation">En préparation</option>
+                                  <option value="Livré">Livré</option>
+                                  <option value="Annulé">Annulé</option>
+                                </select>
+                              </div>
+                              <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ width: "100%", marginTop: "10px" }}
+                              >
+                                {editingOrder ? "Mettre à jour" : "Enregistrer"}
+                              </button>
+                            </form>
+                          </Modal>
+                        )}
+                      </div>
+                    );
+                  };
+
+            // --- 4. GESTION ADMINS ---
+            const AdminManager = ({ admins, setAdmins }) => {
+              const [isModalOpen, setIsModalOpen] = React.useState(false);
+              const [editingAdmin, setEditingAdmin] = React.useState(null);
+              const [formData, setFormData] = React.useState({
+                username: "",
+                email: "",
+                password: "",
+              });
+
+              const apiRequest = async (url, method = "GET", data = null) => {
+                try {
+                  const options = {
+                    method,
+                    headers: { "Content-Type": "application/json" }
+                  };
+                  if (data) options.body = JSON.stringify(data);
+
+                  const res = await fetch(url, options);
+                  return await res.json();
+                } catch (err) {
+                  console.error(err);
+                  return null;
+                }
+              };
+
+              const refreshAdmins = async () => {
+                const data = await apiRequest("/api/admins");
+                if (data) setAdmins(data);
+              }
+
+              const handleOpenModal = (admin = null) => {
+                if (admin) {
+                  setEditingAdmin(admin);
+                  setFormData({ username: admin.username, email: admin.email, password: "" });
+                } else {
+                  setEditingAdmin(null);
+                  setFormData({ username: "", email: "", password: "" });
+                }
+                setIsModalOpen(true);
+              };
+
+              const handleSubmit = async (e) => {
+                e.preventDefault();
+                const payload = { username: formData.username, email: formData.email };
+                if (!editingAdmin || formData.password.trim() !== "") {
+                  payload.password = formData.password;
+                }
+
+                if (editingAdmin) {
+                  await apiRequest(`/api/admins/${editingAdmin.id}`, "PUT", payload);
+                } else {
+                  await apiRequest("/api/admins", "POST", payload);
+                }
+
+                setIsModalOpen(false);
+                refreshAdmins();
+              };
+
+              const handleDelete = async (id) => {
+                if (window.confirm("Supprimer cet admin ?")) {
+                  await apiRequest(`/api/admins/${id}`, "DELETE");
+                  refreshAdmins();
+                }
+              };
+
+              return (
+                <div>
+                  <div className="flex-between mb-20">
+                    <h2>Gestion Administrateurs</h2>
+                    <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+                      <i className="fas fa-plus"></i> Ajouter
+                    </button>
+                  </div>
+
+                  <div className="card">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Username</th>
+                          <th>Email</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {admins.map((a) => (
+                          <tr key={a.id}>
+                            <td>{a.username}</td>
+                            <td>{a.email}</td>
+                            <td>
+                              <button className="btn btn-edit" onClick={() => handleOpenModal(a)}>
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button className="btn btn-danger" onClick={() => handleDelete(a.id)}>
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {isModalOpen && (
+                    <Modal
+                      onClose={() => setIsModalOpen(false)}
+                      title={editingAdmin ? "Modifier Admin" : "Ajouter un Administrateur"}
+                    >
+                      <form onSubmit={handleSubmit}>
+                        <div className="input-group">
+                          <label>Username</label>
+                          <input type="text" required value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })}/>
+                        </div>
+                        <div className="input-group">
+                          <label>Email</label>
+                          <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}/>
+                        </div>
+                        <div className="input-group">
+                          <label>Mot de passe {editingAdmin && "(Laisser vide pour ne pas changer)"}</label>
+                          <input type="password" required={!editingAdmin} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })}/>
+                        </div>
+                        <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
+                          {editingAdmin ? "Modifier" : "Créer Admin"}
+                        </button>
+                      </form>
+                    </Modal>
+                  )}
+                </div>
+              );
+            };
+
+
+                  // --- APP PRINCIPALE ---
+                  const App = () => {
+                    const [activeView, setActiveView] = useState("dashboard");
+                    const [loading, setLoading] = useState(true);
+
+                    // États initiaux vides
+                    const [products, setProducts] = useState([]);
+                    const [orders, setOrders] = useState([]);
+                    const [cities, setCities] = useState([]);
+                    const [admins, setAdmins] = useState([]);
+
+                    // Fetch Initial Data
+                    useEffect(() => {
+                        const initDashboard = async () => {
+                            setLoading(true);
+                            try {
+                                const [pRes, oRes, cRes, aRes] = await Promise.all([
+                                    apiRequest("/products"),
+                                    apiRequest("/orders"),
+                                    apiRequest("/cities"),
+                                    apiRequest("/admins")
+                                ]);
+
+                                if(pRes) setProducts(pRes);
+                                if(oRes) setOrders(oRes);
+                                if(cRes) setCities(cRes);
+                                if(aRes) setAdmins(aRes);
+                            } catch (error) {
+                                console.error("Erreur init dashboard", error);
+                            } finally {
+                                setLoading(false);
+                            }
+                        };
+
+                        initDashboard();
+                    }, []);
+
+                    const renderView = () => {
+                      if (loading) return <div className="loading-spinner"></div>;
+
+                      switch (activeView) {
+                        case "dashboard":
+                          return (
+                            <div>
+                              <h2>Tableau de Bord</h2>
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns:
+                                    "repeat(auto-fit, minmax(200px, 1fr))",
+                                  gap: "20px",
+                                  marginBottom: "24px",
+                                }}
+                              >
+                                <div
+                                  className="card"
+                                  style={{ borderLeft: "4px solid var(--accent)" }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: "1.8rem",
+                                      fontWeight: "700",
+                                      color: "var(--text-main)",
+                                    }}
+                                  >
+                                    {orders.length}
+                                  </div>
+                                  <div
+                                    style={{
+                                      color: "var(--text-muted)",
+                                      fontSize: "0.85rem",
+                                    }}
+                                  >
+                                    Commandes Totales
+                                  </div>
+                                </div>
+                                <div
+                                  className="card"
+                                  style={{ borderLeft: "4px solid var(--success)" }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: "1.8rem",
+                                      fontWeight: "700",
+                                      color: "var(--text-main)",
+                                    }}
+                                  >
+                                    {orders.reduce((acc, o) => acc + (parseFloat(o.total) || 0), 0)} DT
+                                  </div>
+                                  <div
+                                    style={{
+                                      color: "var(--text-muted)",
+                                      fontSize: "0.85rem",
+                                    }}
+                                  >
+                                    Revenu Total
+                                  </div>
+                                </div>
+                                <div
+                                  className="card"
+                                  style={{ borderLeft: "4px solid #9CA3AF" }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: "1.8rem",
+                                      fontWeight: "700",
+                                      color: "var(--text-main)",
+                                    }}
+                                  >
+                                    {products.filter(p => p.is_active || p.isActive).length}
+                                  </div>
+                                  <div
+                                    style={{
+                                      color: "var(--text-muted)",
+                                      fontSize: "0.85rem",
+                                    }}
+                                  >
+                                    Produits Actifs
+                                  </div>
+                                </div>
+                              </div>
+                              <h3>Dernières Commandes</h3>
+                              <div
+                                className="card mt-10"
+                                style={{ padding: "0", overflow: "hidden" }}
+                              >
+                                <table>
+                                  <thead>
+                                    <tr>
+                                      <th>Client</th>
+                                      <th>Montant</th>
+                                      <th>Statut</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {orders.slice(0, 5).map((o) => (
+                                      <tr key={o.id}>
+                                        <td>{o.customer_name}</td>
+                                        <td>{o.total} DT</td>
+                                        <td>
+                                          <span className="badge badge-default">
+                                            {o.status}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        case "products":
+                          return (
+                            <ProductManager products={products} setProducts={setProducts} />
+                          );
+                        case "orders":
+                          return (
+                            <OrderManager
+                              orders={orders}
+                              setOrders={setOrders}
+                              cities={cities}
+                            />
+                          );
+                        case "admins":
+                          return <AdminManager admins={admins} setAdmins={setAdmins} />;
+                        default:
+                          return <div>Page en construction</div>;
+                      }
+                    };
+
+                    return (
+                      <div className="app-container">
+                        <Sidebar activeView={activeView} setView={setActiveView} />
+                        <div className="main-content">
+                          <header className="header">
+                            <div style={{ fontWeight: 600 }}>OHMEALS Admin</div>
+                            <div
+                              style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: "50%",
+                                background: "var(--bg-card)",
+                                border: "1px solid var(--border)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "var(--accent)",
+                              }}
+                            >
+                              A
+                            </div>
+                          </header>
+                          <div className="content-scroll">{renderView()}</div>
+                        </div>
+                      </div>
+                    );
+                  };
+
+                  const root = ReactDOM.createRoot(document.getElementById("root"));
+                  root.render(<App />);
+                  {% endraw %}
+    </script>
+  </body>
+</html>
