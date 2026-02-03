@@ -2,15 +2,16 @@
 API controller - REST API for React dashboard.
 Prefix: /api
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 from flask_login import login_required
 from werkzeug.security import generate_password_hash
 
 from app.extensions import db
 from app.models.admin import Admin
-from app.models.product import Product
+from app.models.product import Product, ProductVariant
 from app.models.order import Order, OrderItem
 
+# Blueprint API
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
@@ -86,10 +87,6 @@ def delete_admin(id):
 # PRODUCT CRUD
 # ============================================
 
-# ------------------------
-# GET /products
-# Retourne tous les produits avec leurs variantes disponibles
-# ------------------------
 @api_bp.route('/products', methods=['GET'])
 @login_required
 def get_products():
@@ -98,7 +95,6 @@ def get_products():
     result = []
 
     for p in products:
-        # On récupère les variantes disponibles pour ce produit
         variants = []
         for v in p.variants:
             variants.append({
@@ -109,71 +105,71 @@ def get_products():
                 "is_available": v.is_available,
                 "is_default": v.is_default,
                 "position": v.position,
-                "price_display": v.get_price_display()  # prix formaté
+                "price_display": v.get_price_display()
             })
-
         result.append({
             "id": p.id,
             "name": p.name,
             "description": p.description,
             "category": p.category,
-            "taste": p.taste,
+            "taste": getattr(p, 'taste', None),
             "image": p.image,
             "is_active": p.is_active,
-            "variants": variants  # toutes les variantes liées
+            "variants": variants
         })
 
     return jsonify(result), 200
 
 
-# ------------------------
-# POST /products
-# Crée un produit avec une première variante
-# ------------------------
 @api_bp.route('/products', methods=['POST'])
 @login_required
 def add_product():
-    """Create new product with initial variant."""
+    """Create new product with optional first variant."""
     data = request.get_json()
-
     # Vérification des champs obligatoires
     required_fields = ['name', 'category', 'variant_name', 'unit', 'price']
     for field in required_fields:
-        if not data.get(field):
+        val = data.get(field)
+        if val is None or (isinstance(val, str) and not val.strip()):
+            # Exception: price peut être 0
+            if field == 'price' and val == 0:
+                continue
             return jsonify({'error': f'Champ obligatoire manquant: {field}'}), 400
 
-    # Création du produit
+    try:
+        price = float(data['price'])
+        if price < 0:
+            return jsonify({'error': 'Le prix ne peut pas être négatif'}), 400
+    except ValueError:
+        return jsonify({'error': 'Prix invalide'}), 400
+
     new_product = Product(
         name=data['name'],
-        description=data.get('description', ''),
+        description=data.get('description'),
         category=data['category'],
         taste=data.get('taste'),
-        image=data.get('image', ''),
-        is_active=data.get('is_active', True)
+        image=data.get('image'),
+        is_active=True
     )
     db.session.add(new_product)
-    db.session.commit()  # On commit pour avoir l'ID du produit
-
-    # Création de la première variante
-    variant = ProductVariant(
-        product_id=new_product.id,
-        variant_name=data['variant_name'],
-        unit=data['unit'],
-        price=float(data['price']),
-        is_available=True,
-        is_default=True,
-        position=1
-    )
-    db.session.add(variant)
     db.session.commit()
 
-    return jsonify({'message': 'Produit créé avec succès', 'product_id': new_product.id}), 201
+    variant_name = data.get('variant_name')
+    if variant_name:
+        variant = ProductVariant(
+            variant_name=variant_name,
+            price=price,
+            unit=data.get('unit', 'piece'),
+            is_default=True,
+            position=1,
+            product_id=new_product.id
+        )
+        db.session.add(variant)
+        db.session.commit()
+
+    return jsonify({'message': 'Produit ajouté avec succès', 'product_id': new_product.id}), 201
 
 
-# ------------------------
-# PUT /products/<id>
-# Modifie un produit et ses variantes
-# ------------------------
 @api_bp.route('/products/<int:id>', methods=['PUT'])
 @login_required
 def update_product(id):
@@ -181,19 +177,16 @@ def update_product(id):
     product = Product.query.get_or_404(id)
     data = request.get_json()
 
-    # Update des champs de base du produit
     product.name = data.get('name', product.name)
     product.description = data.get('description', product.description)
     product.category = data.get('category', product.category)
-    product.taste = data.get('taste', product.taste)
+    product.taste = data.get('taste', getattr(product, 'taste', None))
     product.image = data.get('image', product.image)
     if 'is_active' in data:
         product.is_active = bool(data['is_active'])
 
-    # Update ou création de variantes (si envoyées)
     if data.get('variants'):
         for vdata in data['variants']:
-            # Si l'ID de variante est présent, on modifie
             if vdata.get('id'):
                 variant = ProductVariant.query.get(vdata['id'])
                 if variant:
@@ -205,7 +198,6 @@ def update_product(id):
                     variant.is_default = vdata.get('is_default', variant.is_default)
                     variant.position = vdata.get('position', variant.position)
             else:
-                # Si pas d'ID, on crée une nouvelle variante
                 new_variant = ProductVariant(
                     product_id=product.id,
                     variant_name=vdata['variant_name'],
@@ -221,23 +213,19 @@ def update_product(id):
     return jsonify({'message': 'Produit et variantes modifiés avec succès'})
 
 
-# ------------------------
-# DELETE /products/<id>
-# Supprime un produit et toutes ses variantes
-# ------------------------
 @api_bp.route('/products/<int:id>', methods=['DELETE'])
 @login_required
 def delete_product(id):
     """Delete product and all its variants."""
     product = Product.query.get_or_404(id)
-    db.session.delete(product)  # cascade supprime automatiquement les variantes
+    db.session.delete(product)
     db.session.commit()
     return jsonify({'message': 'Produit et variantes supprimés avec succès'})
+
 
 # ============================================
 # ORDER CRUD
 # ============================================
-
 
 @api_bp.route('/orders', methods=['GET'])
 @login_required
@@ -283,7 +271,6 @@ def add_order():
     if not data.get('items') or len(data['items']) == 0:
         return jsonify({'error': 'La commande doit contenir au moins un produit'}), 400
 
-    # Calculate total from items
     items_total = 0
     order_items = []
 
@@ -306,7 +293,6 @@ def add_order():
     delivery_fee = float(data.get('delivery_fee', 0))
     total_price = items_total + delivery_fee
 
-    # Create order
     new_order = Order(
         customer_name=data['customer_name'],
         customer_phone=data['customer_phone'],
@@ -317,18 +303,13 @@ def add_order():
         status='En attente'
     )
     db.session.add(new_order)
-    db.session.flush()  # Get order ID
+    db.session.flush()
 
-    # Create order items
     for item_data in order_items:
-        order_item = OrderItem(
-            order_id=new_order.id,
-            **item_data
-        )
+        order_item = OrderItem(order_id=new_order.id, **item_data)
         db.session.add(order_item)
 
     db.session.commit()
-
     return jsonify({'message': 'Commande créée avec succès', 'id': new_order.id}), 201
 
 
@@ -372,8 +353,6 @@ def get_stats():
     total_products = Product.query.count()
     active_products = Product.query.filter_by(is_active=True).count()
     total_admins = Admin.query.count()
-
-    # Calculate total revenue
     orders = Order.query.all()
     total_revenue = sum(o.total_price for o in orders)
 

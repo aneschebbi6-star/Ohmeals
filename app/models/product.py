@@ -20,7 +20,7 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(50), nullable=False)  # 'snack', 'plat', 'salade'
     taste = db.Column(db.String(20), nullable=True)      # 'sucré' or 'salé'
-    image = db.Column(db.String(200), nullable=True)
+    image = db.Column(db.Text, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
 
     # Relation 1-n vers ProductVariant

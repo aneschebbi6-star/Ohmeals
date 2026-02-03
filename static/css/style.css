@@ -1004,4 +1004,134 @@ a:focus {
 .footer_section .footer-info p a {
   color: inherit;
 }
+/* Bouton de commande (sur la carte produit) */
+.btn-order {
+  background-color: var(--dark-color);
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  transition: all 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-order:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* --- Style interne de la POPUP (Modal) --- */
+
+/* Lignes de choix des variantes (ex: "Petite 10cm") */
+.variant-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.variant-option:hover:not(.disabled) {
+  background-color: #f8f9fa;
+}
+
+.variant-option.selected {
+  border-color: var(--primary-color);
+  background-color: #fff9e6;
+}
+
+.variant-option.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f9f9f9;
+}
+
+/* Contrôle de la quantité (+ / -) */
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-qty {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+/* Filter Tabs (Onglets Snacks, Plats, Salades...) */
+.filters_menu {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filters_menu li {
+  padding: 10px 25px;
+  cursor: pointer;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border: 1px solid #ccc;
+  background: #fff;
+  user-select: none;
+}
+
+.filters_menu li:hover,
+.filters_menu li.active {
+  background-color: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+
+/* Sorting Controls (Menus déroulants Prix/Goût) */
+.sorting-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.sort-select {
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+/* Affichage du prix total dans la popup */
+.total-price-display {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark-color);
+}
 /*# sourceMappingURL=style.css.map */
+
+/* --- Modal Custom Display (for .active class) --- */
+.modal.active {
+    display: block;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+}
+
+.modal.active .modal-dialog {
+    transform: translate(0, 0);
+}

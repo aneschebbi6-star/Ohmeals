@@ -1,329 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login Now</title>
 
-    <!-- Bootstrap CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    />
-    <!-- Bootstrap core CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/bootstrap.css') }}"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
-    <!-- Owl Carousel -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Now</title>
 
-    <!-- Nice Select -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/css/nice-select.min.css"
-      integrity="sha512-CruCP+TD3yXzlvvijET8wV5WxxEh5H8P4cmz0RFbKK6FlZ2sYl3AEsKlLPHbniXKSrDdFewhbmBK5skbdsASbQ=="
-      crossorigin="anonymous"
-    />
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Owl Carousel -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
 
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/font-awesome.min.css') }}"
-    />
+  <!-- Nice Select -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/css/nice-select.min.css"
+    integrity="sha512-CruCP+TD3yXzlvvijET8wV5WxxEh5H8P4cmz0RFbKK6FlZ2sYl3AEsKlLPHbniXKSrDdFewhbmBK5skbdsASbQ=="
+    crossorigin="anonymous" />
 
-    <!-- Custom styles -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}" />
 
-    <!-- Responsive -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/responsive.css') }}"
-    />
-    <!-- CSS INTERNE -->
-    <style>
-      body {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #060606, #4d535e);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 
-      .login-box {
-        width: 100%;
-        max-width: 420px;
-        background: white;
-        padding: 35px;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      }
-      #passwordError {
-        margin: 20px;
-      }
+  <!-- Responsive -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}" />
+  <!-- CSS INTERNE -->
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #060606, #4d535e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-      .login-box h2 {
-        font-weight: 600;
-        margin-bottom: 25px;
-        text-align: center;
-        color: #333;
-      }
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 35px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
 
-      .form-label {
-        color: #444;
-      }
+    #passwordError {
+      margin: 20px;
+    }
 
-      .form-control {
-        height: 45px;
-        border-radius: 8px;
-      }
+    .login-box h2 {
+      font-weight: 600;
+      margin-bottom: 25px;
+      text-align: center;
+      color: #333;
+    }
 
-      .btn-primary {
-        background: #5b6069;
-        border: none;
-        height: 45px;
-        border-radius: 8px;
-        font-weight: 500;
-      }
+    .form-label {
+      color: #444;
+    }
 
-      .btn-primary:hover {
-        background: #000000;
-      }
-      .password-wrapper {
-        position: relative;
-      }
+    .form-control {
+      height: 45px;
+      border-radius: 8px;
+    }
 
-      .eye-toggle {
-        position: absolute;
-        right: 15px;
-        top: 12px;
-        cursor: pointer;
-      }
+    .btn-primary {
+      background: #5b6069;
+      border: none;
+      height: 45px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
 
-      .eye-toggle i {
-        font-size: 1.2rem;
-        color: #555;
-      }
+    .btn-primary:hover {
+      background: #000000;
+    }
 
-      .eye-toggle i:hover {
-        color: #000;
-      }
-    </style>
-  </head>
+    .password-wrapper {
+      position: relative;
+    }
 
-  <body>
-    <div class="login-box">
-      <form method="POST" id="loginForm" action="{{ url_for('auth.login') }}">
-        <h2>Login</h2>
+    .eye-toggle {
+      position: absolute;
+      right: 15px;
+      top: 12px;
+      cursor: pointer;
+    }
 
-        <!-- USERNAME -->
-        <label class="form-label">Username</label>
-        <input
-          type="text"
-          name="username"
-          class="form-control mb-3"
-          placeholder="Username"
-          autocomplete="off"
-          required
-        />
+    .eye-toggle i {
+      font-size: 1.2rem;
+      color: #555;
+    }
 
-        <!-- PASSWORD -->
-        <label class="form-label">Password</label>
-        <div class="password-wrapper">
-          <input
-            type="password"
-            name="password"
-            class="form-control mb-3"
-            required
-            id="password"
-            autocomplete="new-password"
-            placeholder="Password"
-          />
-          <span class="eye-toggle" id="togglePassword">
-            <i class="bi bi-eye"></i>
-          </span>
-        </div>
+    .eye-toggle i:hover {
+      color: #000;
+    }
+  </style>
+</head>
 
-        <div id="passwordError" class="text-danger"></div>
+<body>
+  <div class="login-box">
+    <form method="POST" id="loginForm" action="{{ url_for('auth.login') }}">
+      <h2>Login</h2>
 
-        <div class="form-check mb-3">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            value=""
-            id="rememberMe"
-            checked
-          />
-          <label class="form-check-label" for="rememberMe"> Remember Me </label>
-          <p class="text-center mt-3">
-            <a href="{{ url_for('auth.forgot_password') }}">Mot de passe oublié ?</a>
-          </p>
-        </div>
+      <!-- USERNAME -->
+      <label class="form-label">Username</label>
+      <input type="text" name="username" class="form-control mb-3" placeholder="Username" autocomplete="off" required />
 
-        <!-- SUBMIT -->
-        <button type="submit" class="btn btn-primary w-100">Login</button>
+      <!-- PASSWORD -->
+      <label class="form-label">Password</label>
+      <div class="password-wrapper">
+        <input type="password" name="password" class="form-control mb-3" required id="password"
+          autocomplete="new-password" placeholder="Password" />
+        <span class="eye-toggle" id="togglePassword">
+          <i class="bi bi-eye"></i>
+        </span>
+      </div>
 
-        <!-- ERROR -->
-        {% if error %}
-        <p class="text-danger text-center mt-3">{{ error }}</p>
-        {% endif %}
-      </form>
-    </div>
-    <!-- footer section -->
-    <footer class="footer_section">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-4 footer-col">
-            <div class="footer_contact">
-              <h4>Contact Us</h4>
-              <div class="contact_link_box">
-                <a href="#">
-                  <i class="fa fa-map-marker" aria-hidden="true"></i>
-                  <span> Location </span>
-                </a>
-                <a href="tel:+011234567890">
-                  <i class="fa fa-phone" aria-hidden="true"></i>
-                  <span> Call +01 1234567890 </span>
-                </a>
-                <a href="mailto:demo@gmail.com">
-                  <i class="fa fa-envelope" aria-hidden="true"></i>
-                  <span> demo@gmail.com </span>
-                </a>
-              </div>
+      <div id="passwordError" class="text-danger"></div>
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" value="" id="rememberMe" checked />
+        <label class="form-check-label" for="rememberMe"> Remember Me </label>
+        <p class="text-center mt-3">
+          <a href="{{ url_for('auth.forgot_password') }}">Mot de passe oublié ?</a>
+        </p>
+      </div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+
+      <!-- ERROR -->
+      {% if error %}
+      <p class="text-danger text-center mt-3">{{ error }}</p>
+      {% endif %}
+    </form>
+  </div>
+  <!-- footer section -->
+  <footer class="footer_section">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 footer-col">
+          <div class="footer_contact">
+            <h4>Contact Us</h4>
+            <div class="contact_link_box">
+              <a href="#">
+                <i class="fa fa-map-marker" aria-hidden="true"></i>
+                <span> Location </span>
+              </a>
+              <a href="tel:+011234567890">
+                <i class="fa fa-phone" aria-hidden="true"></i>
+                <span> Call +01 1234567890 </span>
+              </a>
+              <a href="mailto:demo@gmail.com">
+                <i class="fa fa-envelope" aria-hidden="true"></i>
+                <span> demo@gmail.com </span>
+              </a>
             </div>
           </div>
-          <div class="col-md-4 footer-col">
-            <div class="footer_detail">
-              <a href="{{ url_for('page.index') }}" class="footer-logo">Feane</a>
-              <p>
-                Necessary, making this the first true generator on the Internet.
-                It uses a dictionary of over 200 Latin words, combined with
-              </p>
-              <div class="footer_social">
-                <a href="#">
-                  <i class="fa fa-facebook" aria-hidden="true"></i>
-                </a>
-                <a href="#">
-                  <i class="fa fa-twitter" aria-hidden="true"></i>
-                </a>
-                <a href="#">
-                  <i class="fa fa-linkedin" aria-hidden="true"></i>
-                </a>
-                <a href="#">
-                  <i class="fa fa-instagram" aria-hidden="true"></i>
-                </a>
-                <a href="#">
-                  <i class="fa fa-pinterest" aria-hidden="true"></i>
-                </a>
-              </div>
+        </div>
+        <div class="col-md-4 footer-col">
+          <div class="footer_detail">
+            <a href="{{ url_for('page.index') }}" class="footer-logo">Feane</a>
+            <p>
+              Necessary, making this the first true generator on the Internet.
+              It uses a dictionary of over 200 Latin words, combined with
+            </p>
+            <div class="footer_social">
+              <a href="#">
+                <i class="fa fa-facebook" aria-hidden="true"></i>
+              </a>
+              <a href="#">
+                <i class="fa fa-twitter" aria-hidden="true"></i>
+              </a>
+              <a href="#">
+                <i class="fa fa-linkedin" aria-hidden="true"></i>
+              </a>
+              <a href="#">
+                <i class="fa fa-instagram" aria-hidden="true"></i>
+              </a>
+              <a href="#">
+                <i class="fa fa-pinterest" aria-hidden="true"></i>
+              </a>
             </div>
           </div>
-          <div class="col-md-4 footer-col">
-            <h4>Opening Hours</h4>
-            <p>Everyday</p>
-            <p>10.00 Am -10.00 Pm</p>
-          </div>
+        </div>
+        <div class="col-md-4 footer-col">
+          <h4>Opening Hours</h4>
+          <p>Everyday</p>
+          <p>10.00 Am -10.00 Pm</p>
         </div>
       </div>
-    </footer>
+    </div>
+  </footer>
 
-    <!-- footer section -->
-    <!-- JS Validation -->
-    <script>
-      const form = document.getElementById("loginForm");
-      const password = document.getElementById("password");
-      const passwordError = document.getElementById("passwordError");
-      const togglePassword = document.getElementById("togglePassword");
+  <!-- footer section -->
+  <!-- JS Validation -->
+  <script>
+    const form = document.getElementById("loginForm");
+    const password = document.getElementById("password");
+    const passwordError = document.getElementById("passwordError");
+    const togglePassword = document.getElementById("togglePassword");
 
-      /* =========================
-     Nettoyage au chargement
-     ========================= */
-      window.addEventListener("load", () => {
-        form.reset(); // champs vides
+    /* =========================
+   Nettoyage au chargement
+   ========================= */
+    window.addEventListener("load", () => {
+      form.reset(); // champs vides
+      password.type = "password";
+      passwordError.textContent = "";
+      togglePassword.querySelector("i").className = "bi bi-eye";
+    });
+
+    /* =========================
+       Oeil : afficher / masquer
+       ========================= */
+    togglePassword.addEventListener("click", () => {
+      const icon = togglePassword.querySelector("i");
+
+      if (password.type === "password") {
+        password.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      } else {
         password.type = "password";
-        passwordError.textContent = "";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+      }
+    });
+
+    /* =========================
+       Validation du formulaire
+       ========================= */
+    form.addEventListener("submit", function (event) {
+      passwordError.textContent = ""; // Reset message
+      const pwd = password.value;
+
+      // Vérifier lettre + chiffre
+      const hasLetter = /[a-zA-Z]/.test(pwd);
+      const hasNumber = /[0-9]/.test(pwd);
+
+      if (!hasLetter || !hasNumber) {
+        passwordError.textContent =
+          "Le mot de passe doit contenir au moins une lettre et un chiffre.";
+        event.preventDefault();
+        return;
+      }
+
+      // Minimum 6 caractères
+      if (pwd.length < 6) {
+        passwordError.textContent =
+          "Le mot de passe doit contenir au moins 6 caractères.";
+        event.preventDefault();
+        return;
+      }
+
+      // Effacer le mot de passe après submit
+      setTimeout(() => {
+        password.value = "";
+        password.type = "password";
         togglePassword.querySelector("i").className = "bi bi-eye";
-      });
+      }, 100);
+    });
+  </script>
 
-      /* =========================
-         Oeil : afficher / masquer
-         ========================= */
-      togglePassword.addEventListener("click", () => {
-        const icon = togglePassword.querySelector("i");
+  <!-- jQery -->
+  <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+  <!-- popper js -->
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <!-- bootstrap js -->
+  <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+  <!-- owl slider -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+  <!-- isotope js -->
+  <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
+  <!-- nice select -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
+  <!-- custom js -->
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+</body>
 
-        if (password.type === "password") {
-          password.type = "text";
-          icon.classList.remove("bi-eye");
-          icon.classList.add("bi-eye-slash");
-        } else {
-          password.type = "password";
-          icon.classList.remove("bi-eye-slash");
-          icon.classList.add("bi-eye");
-        }
-      });
-
-      /* =========================
-         Validation du formulaire
-         ========================= */
-      form.addEventListener("submit", function (event) {
-        passwordError.textContent = ""; // Reset message
-        const pwd = password.value;
-
-        // Vérifier lettre + chiffre
-        const hasLetter = /[a-zA-Z]/.test(pwd);
-        const hasNumber = /[0-9]/.test(pwd);
-
-        if (!hasLetter || !hasNumber) {
-          passwordError.textContent =
-            "Le mot de passe doit contenir au moins une lettre et un chiffre.";
-          event.preventDefault();
-          return;
-        }
-
-        // Minimum 6 caractères
-        if (pwd.length < 6) {
-          passwordError.textContent =
-            "Le mot de passe doit contenir au moins 6 caractères.";
-          event.preventDefault();
-          return;
-        }
-
-        // Effacer le mot de passe après submit
-        setTimeout(() => {
-          password.value = "";
-          password.type = "password";
-          togglePassword.querySelector("i").className = "bi bi-eye";
-        }, 100);
-      });
-    </script>
-
-    <!-- jQery -->
-    <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
-    <!-- popper js -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-      crossorigin="anonymous"
-    ></script>
-    <!-- bootstrap js -->
-    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
-    <!-- owl slider -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-    <!-- isotope js -->
-    <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
-    <!-- nice select -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
-    <!-- custom js -->
-    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
-  </body>
 </html>
