@@ -11,54 +11,47 @@ page_bp = Blueprint('page', __name__)
 @page_bp.route('/')
 def index():
     """Home page with featured products."""
-    # Récupérer 6 produits actifs
-    products = (
-        Product.query
-        .filter_by(is_active=True)
-        .limit(6)
-        .all()
-    )
+    # 1. Récupérer TOUS les produits actifs (pas .limit(6) si tu veux que les filtres marchent)
+    products = Product.query.filter_by(is_active=True).all()
 
-    plats = []
+    # 2. Préparer les données EXACTEMENT comme le JavaScript les attend
+    prepared_products = []
 
     for p in products:
-        # Variante par défaut (ou première disponible)
-        default_variant = None
-        for v in p.variants:
-            if v.is_available and v.is_default:
-                default_variant = v
-                break
-
-        # Si aucune variante par défaut, prendre la première disponible
-        if not default_variant:
+        # --- Ici, on construit la liste des variantes ---
+        # Le JS a besoin de 'variants': [...] pour boucler dessus
+        variants_data = []
+        
+        if p.variants:
             for v in p.variants:
-                if v.is_available:
-                    default_variant = v
-                    break
+                variants_data.append({
+                    'id': v.id,
+                    'variant_name': v.variant_name,
+                    'unit': v.unit,
+                    'price': float(v.price),
+                    'is_available': v.is_available,
+                    'is_default': v.is_default
+                })
 
-        plats.append({
+        # --- On construit l'objet produit complet ---
+        product_dict = {
             'id': p.id,
             'name': p.name,
             'description': p.description or '',
-            'category': p.category,     # snack / plat / salade
-            'taste': p.taste,           # sucré / salé
-            'image': p.image or 'f1.png',
+            'category': p.category,       # 'snack', 'plat', etc.
+            'taste': p.taste,             # 'sucré', 'salé'
+            'image': p.image,
+            # C'est cette clé 'variants' qui est cruciale pour ton menu.js !
+            'variants': variants_data
+        }
+        
+        prepared_products.append(product_dict)
 
-            # Infos affichables (via variante)
-            'default_variant': {
-                'id': default_variant.id if default_variant else None,
-                'name': default_variant.variant_name if default_variant else '',
-                'unit': default_variant.unit if default_variant else '',
-                'price': default_variant.price if default_variant else 0,
-                'price_display': default_variant.get_price_display()
-                if default_variant else ''
-            }
-        })
-
+    # 3. Rendu
+    # IMPORTANT : On envoie 'products=prepared_products' et non 'plats'
     return render_template(
         'index.html',
-        plats=plats,
-        active_category='*'
+        products=prepared_products
     )
 
 

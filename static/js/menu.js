@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div class="detail-box">
                         <h5>${product.name}</h5>
-                        ${tasteBadge}
+                        <p>${tasteBadge}</p>
                         <p>${product.description || ''}</p>
                         <div class="options d-flex justify-content-between align-items-center mt-3">
                             <div>
