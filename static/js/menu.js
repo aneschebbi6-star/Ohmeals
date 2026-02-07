@@ -199,20 +199,94 @@ function updateModalDisplay() {
 }
 
 function addToCart() {
-  if (!state.selectedVariant) return;
+  if (!state.selectedVariant || !state.currentProduct) return;
 
-  console.log("AJOUT AU PANIER:", {
-    product_id: state.currentProduct.id,
-    variant_id: state.selectedVariant.id,
-    qty: state.modalQty,
-    total: (state.selectedVariant.price * state.modalQty).toFixed(2)
-  });
+  // Utiliser la fonction addToCart de cart.js
+  const product = {
+    id: state.currentProduct.id,
+    name: state.currentProduct.name,
+    price: state.selectedVariant.price,
+    unit: state.selectedVariant.unit,
+    variantId: state.selectedVariant.id,
+    variantName: state.selectedVariant.variant_name || state.selectedVariant.name
+  };
+
+  // Ajouter la quantité sélectionnée
+  for (let i = 0; i < state.modalQty; i++) {
+    if (typeof window.addToCartFromMenu === 'function') {
+      window.addToCartFromMenu(product);
+    }
+  }
 
   closeModal();
-  alert("Produit ajouté au panier !");
 }
 
 function closeModal() {
   const modal = document.getElementById('productModal');
   if (modal) modal.classList.remove('active');
+}
+
+// Fonction appelée par menu.js pour ajouter au panier via cart.js
+window.addToCartFromMenu = function (product) {
+  // Utiliser les fonctions de cart.js
+  const cart = JSON.parse(localStorage.getItem('ohmeals_cart') || '[]');
+
+  const existingIndex = cart.findIndex(
+    item => item.id === product.id && item.variantId === product.variantId
+  );
+
+  if (existingIndex > -1) {
+    cart[existingIndex].quantity += 1;
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      unit: product.unit,
+      variantId: product.variantId || null,
+      variantName: product.variantName || '',
+      quantity: 1
+    });
+  }
+
+  localStorage.setItem('ohmeals_cart', JSON.stringify(cart));
+
+  // Mettre à jour le badge
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const badge = document.getElementById('cart-count');
+  if (badge) {
+    badge.textContent = totalItems;
+    badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+  }
+
+  // Notification
+  showCartNotification('Produit ajouté au panier !');
+};
+
+function showCartNotification(message) {
+  let notif = document.getElementById('cart-notification');
+  if (!notif) {
+    notif = document.createElement('div');
+    notif.id = 'cart-notification';
+    notif.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+    `;
+    document.body.appendChild(notif);
+  }
+
+  notif.textContent = message;
+  notif.style.opacity = '1';
+
+  setTimeout(() => {
+    notif.style.opacity = '0';
+  }, 2000);
 }

@@ -1,68 +1,29 @@
-<<<<<<< HEAD
-# OHMEALS - Traiteur Marocain
-
-## Introduction
-
-OHMEALS est un projet web pour un traiteur marocain, construit avec Flask et Bootstrap 5.
-Le projet se concentre sur une expérience utilisateur claire pour les clients et une interface admin complète pour le traiteur.
-Ce document combine le **business understanding**, les **objectifs**, les **modules de développement**, et des **conseils pratiques**.
-
----
-
-## 📊 Business Understanding
-
-**OHMEALS propose :**
-
-- **Snacks** : vendus au kilo (briouates, pâtisseries) ou à la pièce (mini-sandwichs).
-- **Plats** : vendus par personne (tajine, couscous, rfissa).
-
-**Utilisateurs :**
-
-- **Clients** : veulent commander facilement, comprendre les prix selon l’unité, et passer commande rapidement.
-- **Admin** : veut gérer efficacement les produits, commandes et utilisateurs, et accéder à des statistiques claires.
-
-**Workflow :**
-
-1. Client consulte le menu → choisit produits → remplit formulaire → soumet.
-2. Admin reçoit la commande → prépare → facture → archive.
-3. Prix calculé automatiquement selon l’unité et la quantité.
-
-**Règles métier :**
-
-- Snacks → vendu **au kilo ou à la pièce**, jamais par personne.
-- Plats → vendu **par personne**, jamais au kilo.
-- Affichage et calcul des prix toujours clairs et transparents.
-- Formulaire dynamique selon type de produit choisi.
-
----
-
-## 🎯 Objectifs du projet
-
-- Adapter le frontend aux unités de vente.
-- Créer et connecter la base de données (SQLite + SQLAlchemy).
-- Rendre le menu et le formulaire de réservation dynamiques.
-- Créer le dashboard admin complet avec **React**.
-- Calcul automatique des prix selon l’unité et quantité.
-- Réservation et suivi des commandes complet.
-- Sécurisation des routes et sessions.
-
----
-
-## 🛠️ Technologies prévues
-
-- Python 3.11+
-- Flask 2.x
-- SQLite + SQLAlchemy
-- Bootstrap 5
-- React 18+
-- Jinja2 Templates
-- HTML5, CSS3, JS (Vanilla)
-
----
-
 # OHMEALS - Traiteur Marocain 🇲🇦
 
 Application web pour un traiteur marocain, construite avec **Flask MVC** et **Bootstrap 5**.
+
+---
+
+## 🚀 Démarrage Rapide
+
+```bash
+# 1. Installer les dépendances
+pip install -r requirements.txt
+
+# 2. Initialiser la base de données
+python scripts/init_db.py
+
+# 3. Lancer l'application
+python run.py
+
+# 4. Accéder à http://127.0.0.1:5000
+```
+
+### 🔐 Identifiants Admin
+| Champ | Valeur |
+|-------|--------|
+| Username | `anes` |
+| Password | `anes123` |
 
 ---
 
@@ -71,8 +32,8 @@ Application web pour un traiteur marocain, construite avec **Flask MVC** et **Bo
 | Composant | Technologie |
 |-----------|-------------|
 | Backend | Python 3.11+, Flask 2.x, SQLAlchemy |
-| Frontend Public | Bootstrap 5, Jinja2 |
-| Dashboard Admin | React 18+ |
+| Frontend Public | Bootstrap 5, Jinja2, JavaScript |
+| Dashboard Admin | React 18 (embedded) |
 | Base de données | SQLite |
 
 ---
@@ -84,66 +45,74 @@ OHMEALS/
 ├── app/                          # 📦 Package Flask principal
 │   ├── __init__.py               # Application Factory
 │   ├── config.py                 # Configurations (Dev/Prod)
-│   ├── extensions.py             # SQLAlchemy, LoginManager, Mail
+│   ├── extensions.py             # SQLAlchemy, LoginManager
 │   ├── models/                   # 🗃️ Model (M)
 │   │   ├── admin.py              # Modèle Admin/User
-│   │   ├── product.py            # Modèle Product
+│   │   ├── product.py            # Modèle Product + Variants
 │   │   └── order.py              # Modèles Order + OrderItem
 │   └── controllers/              # 🎮 Controller (C)
 │       ├── page_controller.py    # Routes: /, /about
 │       ├── auth_controller.py    # Routes: /login, /logout
-│       ├── menu_controller.py    # Routes: /menu, /book
+│       ├── menu_controller.py    # Routes: /menu, /book, /order
 │       └── api_controller.py     # API REST: /api/*
 │
 ├── templates/                    # 🎨 View (V) - Jinja2 + Bootstrap
-│   ├── index.html
-│   ├── about.html
-│   ├── menu.html
-│   ├── book.html
-│   ├── login.html
-│   ├── forgot_password.html
+│   ├── index.html                # Page d'accueil
+│   ├── about.html                # À propos
+│   ├── menu.html                 # Menu dynamique
+│   ├── book.html                 # 🛒 Panier + Checkout
+│   ├── login.html                # Connexion admin
 │   └── dashboard/
 │       └── dashboard.html        # Dashboard React
 │
 ├── static/                       # 📂 Assets
 │   ├── css/
 │   ├── js/
-│   ├── fonts/
+│   │   ├── cart.js               # 🛒 Gestion panier (localStorage)
+│   │   ├── menu.js               # Logique menu + modal
+│   │   └── custom.js
 │   └── images/
-│
-├── scripts/                      # 🔧 Scripts utilitaires
-│   └── init_db.py
 │
 ├── instance/                     # 🗄️ Base de données
 │   └── ohmeals.db
 │
+├── docs/                         # 📚 Documentation
+│   └── projet.md
+│
 ├── run.py                        # 🚀 Point d'entrée
-├── requirements.txt              # 📋 Dépendances
 └── README.md
->>>>>>> 303c522 (Refactor complet OHMEALS : nouvelles pages, dossiers et JS mis à jour)
 ```
 
 ---
 
+## ✅ Fonctionnalités
 
-=======
-## 🚀 Démarrage Rapide
+### 🌍 Partie Client (Site Public)
+- [x] Menu dynamique avec filtrage par catégorie (Snacks, Plats, Salades)
+- [x] Tri par prix et par goût (Salé/Sucré)
+- [x] Modal produit avec sélection de variantes
+- [x] **Panier (localStorage)** - Ajout, modification, suppression
+- [x] **Checkout Popup** - Formulaire de commande (Nom, Tel, Adresse)
+- [x] Soumission de commande vers le backend
 
-```bash
-# 1. Installer les dépendances
-pip install -r requirements.txt
+### ⚙️ Partie Admin (Dashboard)
+- [x] Authentification admin
+- [x] Gestion produits (CRUD avec variantes)
+- [x] Gestion commandes (visualisation, statuts)
+- [x] Statistiques de vente
 
-# 2. Lancer l'application
-python run.py
+---
 
-# 3. Accéder à http://127.0.0.1:5000
-```
+## 🔌 API REST
 
-### 🔐 Identifiants Admin
-| Champ | Valeur |
-|-------|--------|
-| Username | `anes` |
-| Password | `anes123` |
+| Endpoint | Méthodes | Description |
+|----------|----------|-------------|
+| `/api/products` | GET, POST | Liste/Créer produits |
+| `/api/products/<id>` | PUT, DELETE | Modifier/Supprimer |
+| `/api/orders` | GET, POST | Liste/Créer commandes |
+| `/api/orders/<id>` | PUT, DELETE | Modifier/Supprimer |
+| `/api/stats` | GET | Statistiques dashboard |
+| `/order` | POST | Création commande (public) |
 
 ---
 
@@ -159,29 +128,16 @@ python run.py
 
 ---
 
-## 🔌 API REST
-
-| Endpoint | Méthodes | Description |
-|----------|----------|-------------|
-| `/api/products` | GET, POST | Liste/Créer produits |
-| `/api/products/<id>` | PUT, DELETE | Modifier/Supprimer |
-| `/api/orders` | GET, POST | Liste/Créer commandes |
-| `/api/orders/<id>` | PUT, DELETE | Modifier/Supprimer |
-| `/api/admins` | GET, POST | Liste/Créer admins |
-| `/api/stats` | GET | Statistiques |
-
----
-
 ## 🧠 Modèles de Données
-
-### Admin
-```
-id, username, email, password, reset_code
-```
 
 ### Product
 ```
-id, name, description, category, unit, price, image, is_active
+id, name, description, category, taste, image, is_active
+```
+
+### ProductVariant
+```
+id, product_id, variant_name, unit, price, is_default, is_available, position
 ```
 
 ### Order
@@ -193,20 +149,6 @@ id, customer_name, customer_phone, customer_email, delivery_address, total_price
 ```
 id, order_id, product_id, quantity, unit, price
 ```
-
----
-
-## ✅ Fonctionnalités
-
-- [x] Architecture MVC avec Blueprints
-- [x] Application Factory pattern
-- [x] API REST pour React Dashboard
-- [x] Authentification admin
-- [x] Templates Bootstrap 5 dynamiques
-- [x] Dashboard React intégré
-- [x] Gestion produits (CRUD)
-- [x] Gestion commandes (CRUD)
-
 
 ---
 

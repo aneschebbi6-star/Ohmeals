@@ -1,84 +1,76 @@
 # Documentation du Projet OHMEALS
 
 ## 1. Introduction
-OHMEALS est une application web complète pour un traiteur marocain ("**ohmeals*"). Elle offre une interface client intuitive pour découvrir les menus et passer commande, ainsi qu'une interface d'administration puissante pour la gestion quotidienne de l'activité.
+OHMEALS est une application web pour un traiteur marocain. Elle combine une interface vitrine pour les clients et un tableau de bord d'administration pour la gestion des commandes et produits.
 
-## 2. Architecture du Projet
-Le projet repose sur une architecture **MVC (Modèle-Vue-Contrôleur)**, garantissant une séparation claire entre les données, l'interface utilisateur et la logique métier.
+**État Actuel** : Prototype Fonctionnel (MVP).
+**Dernière mise à jour de l'analyse** : 07 Février 2026.
 
-### Structure des Dossiers
-*   **`app/`** : Cœur de l'application Flask.
-    *   **`models/`** : Définition des schémas de base de données (Produits, Commandes, Utilisateurs) avec SQLAlchemy.
-    *   **`controllers/`** : Gère les requêtes HTTP, la logique métier et les API REST.
-    *   **`__init__.py`** : Configuration de l'application (Factory Pattern).
-*   **`templates/`** : Vues HTML générées par Jinja2 pour le frontend public.
-*   **`static/`** : Ressources statiques (Feuilles de style CSS, Scripts JavaScript, Images).
-*   **`react-dashboard/`** : Code source du tableau de bord administrateur (Single Page Application en React).
-*   **`instance/`** : Contient la base de données SQLite (`ohmeals.db`).
-*   **`docs/`** : Documentation du projet.
+---
 
-## 3. Technologies Utilisées
+## 2. Analyse de l'État Actuel
 
-### Backend (Serveur)
-*   **Python 3.11+** : Langage principal.
-*   **Flask 2.x** : Framework web léger et flexible.
-*   **SQLAlchemy** : ORM pour l'interaction avec la base de données.
-*   **SQLite** : Base de données relationnelle légère (fichier local).
+### ✅ Ce qui est fait et fonctionnel
+*   **Architecture Backend** : Flask structuré avec Blueprints (MVC), SQLAlchemy configuré.
+*   **Modèles de Données** : `Product` (avec variantes), `Order`, `Admin`, `OrderItem` sont définis.
+*   **API REST** : Endpoints clés pour le dashboard (`/api/products`, `/api/orders`, `/api/stats`) sécurisés avec authentification.
+*   **Frontend Public (Vitrine)** : Pages `Home`, `Menu` (dynamique), `About` implémentées.
 
-### Frontend (Client Public)
-*   **HTML5 / CSS3** : Structure et mise en page.
-*   **Bootstrap 5** : Framework CSS pour un design responsive et moderne.
-*   **Jinja2** : Moteur de templates pour l'affichage dynamique des données.
-*   **JavaScript (Vanilla + jQuery)** : Interactivité (filtres, modales, animations).
+### ⚠️ Problèmes Identifiés & Points d'Attention
+1.  **Système de Commande (EN COURS DE REFONTE)** :
+    *   La page `book.html` actuelle (Réservation de table) est obsolète.
+    *   **Nouveau besoin** : Transformer cette page en **Panier (Cart)** avec un popup de commande finale.
+2.  **Dashboard** : Prototype fonctionnel en un seul fichier (à optimiser plus tard).
 
-### Frontend (Admin Dashboard)
-*   **React 18+** : Bibliothèque JS pour l'interface d'administration.
-*   **API REST** : Communication avec le backend Flask pour les données (CRUD).
+---
 
-## 4. Fonctionnalités Clés
+## 3. Feuille de Route (Roadmap)
 
-### 🌍 Partie Client (Site Web Public)
-1.  **Catalogue & Menu** :
-    *   Affichage dynamique des produits.
-    *   Filtrage instantané par catégorie (Snacks, Plats, Salades).
-    *   Tri des produits par prix et par profil gustatif (Salé/Sucré).
-2.  **Expérience Utilisateur** :
-    *   Design responsive (mobile-first).
-    *   Fenêtre modale (Pop-up) pour les détails produits.
-3.  **Système de Commande** :
-    *   Gestion des variantes de produits (Vente au Kilo, à la Pièce, par Personne).
-    *   Sélection des quantités avec calcul de prix en temps réel.
-4.  **Réservation** :
-    *   Module de réservation de table en ligne.
+### Étape 1 : Implémentation du Panier (Priorité Haute) �
+*   **Menu** : Ajouter les boutons "Ajouter au panier" en JavaScript.
+*   **Page Panier (`book.html`)** :
+    *   Supprimer l'ancien formulaire de réservation.
+    *   Afficher le tableau des articles choisis (via `localStorage`).
+*   **Checkout** : Créer un **Popup** (Modale) au clic sur "Commander" pour saisir Nom, Tel, Adresse.
+*   **Backend** : Créer l'endpoint de réception de commande JSON.
 
-### ⚙️ Partie Administrateur (Privée)
-1.  **Gestion des Produits** : Ajouter, modifier, supprimer des articles du menu. Gestion des images et des stocks.
-2.  **Gestion des Commandes** : Visualiser les nouvelles commandes, traiter les statuts (En préparation, Livré).
-3.  **Utilisateurs** : Gestion des comptes administrateurs.
-4.  **Statistiques** : Suivi des performances de vente.
+### Étape 2 : Optimisation Dashboard
+*   Séparer le code React pour une meilleure maintenabilité.
 
-## 5. Modèles de Données Principaux
+### Étape 4 : Déploiement
+*   Profiter de la légèreté de SQLite pour un déploiement, ou migrer vers PostgreSQL pour plus de robustesse.
+*   Configurer Gunicorn (serveur de prod) au lieu de `run.py`.
 
-*   **Product (Produit)** : Représente un article du menu (Nom, Description, Prix, Unité, Image, Catégorie).
-*   **Order (Commande)** : Contient les infos client et la liste des produits commandés.
-*   **User (Admin)** : Comptes pour l'accès au tableau de bord.
+---
 
-## 6. Installation et Lancement
+## 4. Architecture Technique
 
-Pour lancer le projet localement :
+### Backend (Flask)
+*   `app/models` : Données (SQLAlchemy).
+*   `app/controllers` : Logique.
+    *   `api_controller.py` : Sert le JSON pour le Dashboard (Admin).
+    *   `menu_controller.py` : Sert le HTML pour le Site Public (Client).
+*   `app/templates` : Vues Jinja2.
 
-1.  **Installation des dépendances** :
+### Frontend
+*   **Public** : HTML5 + Bootstrap 5 + jQuery (Formulaires, Modales).
+*   **Admin** : React 18 (Embedded) + API Fetch.
+
+## 5. Comment Lancer le Projet
+
+1.  **Installation** :
     ```bash
     pip install -r requirements.txt
     ```
-
-2.  **Initialisation de la Base de Données** :
+2.  **Base de données** :
     ```bash
     python scripts/init_db.py
     ```
-
-3.  **Démarrage du Serveur** :
+3.  **Lancement** :
     ```bash
     python run.py
     ```
-    L'application sera accessible sur `http://127.0.0.1:5000`.
+    Accès : `http://127.0.0.1:5000`
+
+---
+*Ce document sert de référence unique pour le développement futur.*
