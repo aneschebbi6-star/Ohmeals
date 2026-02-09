@@ -91,15 +91,17 @@ OHMEALS/
 - [x] Menu dynamique avec filtrage par catégorie (Snacks, Plats, Salades)
 - [x] Tri par prix et par goût (Salé/Sucré)
 - [x] Modal produit avec sélection de variantes
-- [x] **Panier (localStorage)** - Ajout, modification, suppression
-- [x] **Checkout Popup** - Formulaire de commande (Nom, Tel, Adresse)
+- [x] **Panier (localStorage)** - Icône avec badge dynamique
+- [x] **Checkout** - Sélection ville (Tunis, Ariana, Ben Arous) & Validation zone
 - [x] Soumission de commande vers le backend
 
 ### ⚙️ Partie Admin (Dashboard)
 - [x] Authentification admin
 - [x] Gestion produits (CRUD avec variantes)
-- [x] Gestion commandes (visualisation, statuts)
-- [x] Statistiques de vente
+- [x] Gestion commandes (Vue détaillée produits)
+- [x] **Facturation** - Génération PDF/Impression factures
+- [x] **Sécurité** - Modification restreinte (Statut uniquement)
+- [x] Statistiques de vente (Revenu total réel)
 
 ---
 

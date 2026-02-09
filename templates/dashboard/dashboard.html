@@ -4,29 +4,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OHMEALS - Admin Complet (Flask + React)</title>
+  <title>OHMEALS - Admin Dashboard (Flask + React)</title>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    /* --- STYLE ORIGINAL CONSERVÉ --- */
+    /* --- STYLE ORIGINAL CONSERVÉ & AMÉLIORÉ --- */
     :root {
       /* PALETTE NOIR & JAUNE */
       --bg-main: #121212;
       --bg-card: #1e1e1e;
+      --bg-hover: #2a2a2a;
       --accent: #cba719;
       /* Jaune Moutarde */
-      --accent-hover: #bf9619;
+      --accent-hover: #e5bd24;
+      --accent-glow: rgba(203, 167, 25, 0.3);
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
       --border: #374151;
-      --danger: #992e2e;
-      --success: #258968;
-      --warning: #d97706;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
     }
 
     * {
@@ -43,6 +47,7 @@
       overflow: hidden;
     }
 
+    /* LAYOUT */
     .app-container {
       display: flex;
       height: 100vh;
@@ -65,7 +70,7 @@
       overflow: hidden;
     }
 
-    /* UI COMPONENTS */
+    /* SIDEBAR COMPONENTS */
     .logo-area {
       padding: 0 24px 24px;
       font-size: 1.25rem;
@@ -73,31 +78,34 @@
       color: var(--text-main);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       border-bottom: 1px solid var(--border);
+      margin-bottom: 10px;
     }
 
     .logo-icon {
       color: var(--accent);
+      font-size: 1.5rem;
     }
 
     .nav-item {
       padding: 12px 24px;
       cursor: pointer;
       color: var(--text-muted);
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       gap: 12px;
       font-size: 0.95rem;
       border-left: 3px solid transparent;
       text-decoration: none;
-      /* Pour le lien Accueil */
+      margin-bottom: 4px;
     }
 
     .nav-item:hover {
       background-color: rgba(250, 204, 21, 0.05);
       color: var(--text-main);
+      transform: translateX(2px);
     }
 
     .nav-item.active {
@@ -106,45 +114,108 @@
           transparent 100%);
       color: var(--accent);
       border-left-color: var(--accent);
+      font-weight: 500;
     }
 
+    /* Home Icon Specific Style (Centered, no text) */
+    .nav-item.home-btn {
+      justify-content: center;
+      padding: 12px;
+      margin: 0 10px 20px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-item.home-btn:hover {
+      border-color: var(--accent);
+      background-color: rgba(203, 167, 25, 0.1);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    /* HEADER & CONTENT */
     .header {
-      height: 64px;
+      height: 70px;
       background-color: var(--bg-card);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 32px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     .content-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 24px;
+      padding: 32px;
     }
 
     .card {
       background-color: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s;
     }
 
-    /* BUTTONS & INPUTS */
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* TABLES (Dynamic Orders Styling) */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    th {
+      text-align: left;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 16px;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      border-bottom: 1px solid #2a2a2a;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr.order-row {
+      transition: background-color 0.2s;
+    }
+
+    tr.order-row:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    /* BUTTONS */
     .btn {
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: 0.2s;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .btn-primary {
@@ -154,12 +225,13 @@
 
     .btn-primary:hover {
       background-color: var(--accent-hover);
+      box-shadow: 0 0 15px var(--accent-glow);
     }
 
     .btn-danger {
       background-color: rgba(239, 68, 68, 0.1);
       color: var(--danger);
-      border: 1px solid var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     .btn-danger:hover {
@@ -167,77 +239,84 @@
       color: white;
     }
 
-    .btn-edit {
-      background-color: #374151;
-      color: var(--text-main);
+    .btn-icon {
+      padding: 8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    .btn-edit:hover {
-      background-color: #4b5563;
+    .btn-invoice {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--info);
+      border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
-    .btn-sm {
-      padding: 4px 8px;
-      font-size: 0.8rem;
+    .btn-invoice:hover {
+      background-color: var(--info);
+      color: white;
     }
 
-    .input-group {
-      margin-bottom: 16px;
-    }
-
-    .input-group label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-
+    /* INPUTS */
     .input-control {
       width: 100%;
       background-color: #0f0f0f;
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 10px;
-      border-radius: 6px;
+      padding: 12px;
+      border-radius: 8px;
       font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
     .input-control:focus {
-      outline: 1px solid var(--accent);
+      outline: none;
       border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(203, 167, 25, 0.2);
     }
 
-    textarea.input-control {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    /* TABLES */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 0.8rem;
+    /* BADGES (Stylish) */
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    td {
-      padding: 12px;
-      color: var(--text-main);
-      font-size: 0.9rem;
-      border-bottom: 1px solid #2a2a2a;
-      vertical-align: middle;
+    .badge.success {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
-    tr:hover {
-      background-color: rgba(255, 255, 255, 0.02);
+    .badge.warning {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge.danger {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge.primary {
+      background-color: rgba(203, 167, 25, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(203, 167, 25, 0.3);
+    }
+
+    .badge.neutral {
+      background-color: rgba(156, 163, 175, 0.15);
+      color: var(--text-muted);
     }
 
     /* MODAL */
@@ -248,21 +327,90 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 50;
-      backdrop-filter: blur(2px);
+      z-index: 100;
+      backdrop-filter: blur(5px);
+      opacity: 0;
+      animation: fadeIn 0.3s forwards;
     }
 
     .modal {
       background: var(--bg-card);
       width: 100%;
       max-width: 700px;
-      /* Plus large pour gérer les variantes */
-      padding: 24px;
-      border-radius: 12px;
+      padding: 32px;
+      border-radius: 16px;
       border: 1px solid var(--border);
-      box-shadow: 0 20px 25 -5px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
       max-height: 90vh;
       overflow-y: auto;
+      transform: scale(0.95);
+      animation: scaleIn 0.3s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes scaleIn {
+      to {
+        transform: scale(1);
+      }
+    }
+
+    /* ORDER SPECIFIC STYLES */
+    .order-product-item {
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .order-total-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* TOAST NOTIFICATIONS */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border-left: 4px solid var(--accent);
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
     }
 
     /* UTILS */
@@ -280,106 +428,12 @@
       margin-top: 10px;
     }
 
-    .mb-10 {
-      margin-bottom: 10px;
-    }
-
-    /* STYLES SUPPLÉMENTAIRES POUR LES IMAGES */
-    .product-thumb {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
-
-    .preview-container {
-      width: 100%;
-      height: 150px;
-      background-color: #0f0f0f;
-      border: 1px dashed var(--border);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 10px;
-      overflow: hidden;
-    }
-
-    .preview-container img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .badge-success {
-      background-color: rgba(37, 137, 104, 0.2);
-      color: var(--success);
-    }
-
-    .badge-warning {
-      background-color: rgba(217, 119, 6, 0.2);
-      color: var(--warning);
-    }
-
-    .badge-danger {
-      background-color: rgba(153, 46, 46, 0.2);
-      color: var(--danger);
-    }
-
-    .badge-default {
-      background-color: rgba(156, 163, 175, 0.2);
-      color: var(--text-muted);
-    }
-
-    .badge-primary {
-      background-color: rgba(203, 167, 25, 0.2);
-      color: var(--accent);
-    }
-
-    .loading-spinner {
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-left-color: var(--accent);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 50px auto;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Variants Styling in Modal */
     .variant-row {
       background: rgba(255, 255, 255, 0.03);
-      padding: 10px;
-      border-radius: 6px;
+      padding: 15px;
+      border-radius: 8px;
       margin-bottom: 10px;
       border: 1px solid var(--border);
-    }
-
-    .variant-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
     }
   </style>
 </head>
@@ -394,43 +448,68 @@
     // --- UTILITAIRES API ---
     const API_URL = "/api";
 
+    // Custom Toast Notification State (Outside component to use globally if needed, or passed via Context)
+    let addToast = null;
+
+    const ToastContainer = () => {
+      const [toasts, setToasts] = useState([]);
+
+      // Expose the add function globally
+      useEffect(() => {
+        addToast = (message, type = 'info') => {
+          const id = Date.now();
+          setToasts(prev => [...prev, { id, message, type }]);
+          setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+          }, 3000);
+        };
+      }, []);
+
+      return (
+        <div className="toast-container">
+          {toasts.map(t => (
+            <div key={t.id} className="toast" style={{ borderLeftColor: t.type === 'error' ? 'var(--danger)' : t.type === 'success' ? 'var(--success)' : 'var(--accent)' }}>
+              <i className={`fas ${t.type === 'success' ? 'fa-check-circle' : t.type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}`}
+                style={{ color: t.type === 'error' ? 'var(--danger)' : t.type === 'success' ? 'var(--success)' : 'var(--accent)' }}></i>
+              <span>{t.message}</span>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
     const apiRequest = async (endpoint, method = "GET", body = null) => {
       const options = {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       };
-      if (body) {
-        options.body = JSON.stringify(body);
-      }
+      if (body) options.body = JSON.stringify(body);
 
       try {
         const response = await fetch(`${API_URL}${endpoint}`, options);
-
-        // Si la réponse n'est pas OK, on tente de lire le JSON d'erreur
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || `Erreur HTTP: ${response.status}`);
         }
-
         if (response.status === 204) return null;
         return await response.json();
       } catch (error) {
         console.error("API Error:", error);
-        alert(error.message || "Une erreur est survenue lors de la communication avec le serveur.");
+        if (addToast) addToast(error.message || "Erreur serveur", 'error');
         return null;
       }
     };
 
-    // --- COMPOSANTS ---
+    // --- COMPOSANTS UI ---
 
     const Sidebar = ({ activeView, setView }) => {
       const menuItems = [
-        { id: "dashboard", label: "Dashboard", icon: "fa-chart-pie" },
+        { id: "dashboard", label: "Tableau de Bord", icon: "fa-chart-pie" },
         { id: "products", label: "Produits", icon: "fa-box-open" },
         { id: "orders", label: "Commandes", icon: "fa-shopping-basket" },
+
         { id: "admins", label: "Administrateurs", icon: "fa-users-cog" },
+        { id: "settings", label: "Paramètres", icon: "fa-cogs" },
       ];
 
       return (
@@ -440,17 +519,15 @@
             <span>OHMEALS</span>
           </div>
           <nav>
-            {/* BOUTON ACCUEIL (Maison) pour retourner à l'index */}
-            <a href="/" className="nav-item" title="Retour au site">
-              <i className="fas fa-home"></i>
-              <span>Accueil</span>
+            {/* ACCUEIL : Uniquement l'icône Maison */}
+            <a href="/" className="nav-item home-btn" title="Retour à l'accueil">
+              <i className="fas fa-home fa-lg"></i>
             </a>
 
             {menuItems.map((item) => (
               <div
                 key={item.id}
-                className={`nav-item ${activeView === item.id ? "active" : ""
-                  }`}
+                className={`nav-item ${activeView === item.id ? "active" : ""}`}
                 onClick={() => setView(item.id)}
               >
                 <i className={`fas ${item.icon}`}></i>
@@ -468,12 +545,10 @@
         <div className="modal-overlay" onClick={onClose}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={sizeStyle}>
             <div className="flex-between mb-20">
-              <h3 style={{ color: "var(--text-main)" }}>{title}</h3>
-              <i
-                className="fas fa-times"
-                style={{ cursor: "pointer", color: "var(--text-muted)" }}
-                onClick={onClose}
-              ></i>
+              <h3 style={{ color: "var(--text-main)", fontSize: "1.25rem" }}>{title}</h3>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <i className="fas fa-times fa-lg"></i>
+              </button>
             </div>
             {children}
           </div>
@@ -481,22 +556,13 @@
       );
     };
 
-    // --- 1. GESTION PRODUITS (AVEC VARIANTES) ---
+    // --- 1. GESTION PRODUITS ---
     const ProductManager = ({ products, setProducts }) => {
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [editingProduct, setEditingProduct] = useState(null);
-
-      // Formulaire avec support des variantes
       const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        category: "snack",
-        taste: "sale",
-        image: "",
-        is_active: true,
-        variants: [
-          { variant_name: "", unit: "piece", price: "", is_available: true, is_default: true }
-        ]
+        name: "", description: "", category: "snack", taste: "sale", image: "", is_active: true,
+        variants: [{ variant_name: "", unit: "piece", price: "", is_available: true, is_default: true }]
       });
       const [sortType, setSortType] = useState("default");
 
@@ -506,29 +572,14 @@
       };
 
       const resetForm = () => ({
-        name: "",
-        description: "",
-        category: "snack",
-        taste: "sale",
-        image: "",
-        is_active: true,
-        variants: [
-          { variant_name: "", unit: "piece", price: "", is_available: true, is_default: true }
-        ]
+        name: "", description: "", category: "snack", taste: "sale", image: "", is_active: true,
+        variants: [{ variant_name: "", unit: "piece", price: "", is_available: true, is_default: true }]
       });
 
       const handleOpenModal = (product = null) => {
         if (product) {
           setEditingProduct(product);
-          setFormData({
-            name: product.name,
-            description: product.description || "",
-            category: product.category,
-            taste: product.taste,
-            image: product.image || "",
-            is_active: product.is_active,
-            variants: product.variants.map(v => ({ ...v })) // Clone array
-          });
+          setFormData({ ...product, variants: product.variants.map(v => ({ ...v })) });
         } else {
           setEditingProduct(null);
           setFormData(resetForm());
@@ -540,143 +591,82 @@
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onloadend = () => {
-            setFormData({ ...formData, image: reader.result });
-          };
+          reader.onloadend = () => setFormData({ ...formData, image: reader.result });
           reader.readAsDataURL(file);
         }
       };
 
-      // Gestion des changements sur une variante spécifique
       const handleVariantChange = (index, field, value) => {
         const newVariants = [...formData.variants];
         newVariants[index][field] = value;
         setFormData({ ...formData, variants: newVariants });
       };
 
-      // Ajouter une variante
       const addVariant = () => {
-        setFormData({
-          ...formData,
-          variants: [
-            ...formData.variants,
-            { variant_name: "", unit: "piece", price: "", is_available: true, is_default: false }
-          ]
-        });
+        setFormData({ ...formData, variants: [...formData.variants, { variant_name: "", unit: "piece", price: "", is_available: true, is_default: false }] });
       };
 
-      // Supprimer une variante
       const removeVariant = (index) => {
-        if (formData.variants.length <= 1) {
-          alert("Il faut au moins une variante.");
-          return;
-        }
-        const newVariants = formData.variants.filter((_, i) => i !== index);
-        // Si on supprime le défaut, on met le premier par défaut
-        if (formData.variants[index].is_default && newVariants.length > 0) {
-          newVariants[0].is_default = true;
-        }
+        if (formData.variants.length <= 1) return;
+        let newVariants = formData.variants.filter((_, i) => i !== index);
+        if (formData.variants[index].is_default && newVariants.length > 0) newVariants[0].is_default = true;
         setFormData({ ...formData, variants: newVariants });
       };
 
       const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Validation simple
         if (!formData.name || formData.variants.length === 0) return;
 
-        // Préparation du payload
         const payload = {
-          name: formData.name,
-          description: formData.description,
-          category: formData.category,
-          taste: formData.taste,
-          image: formData.image,
-          is_active: formData.is_active
+          name: formData.name, description: formData.description, category: formData.category,
+          taste: formData.taste, image: formData.image, is_active: formData.is_active
         };
 
         if (editingProduct) {
-          // Mode ÉDITION : Envoi de la liste complète des variantes
           payload.variants = formData.variants.map((v, i) => ({
-            id: v.id, // On garde l'ID si ça existe pour update, sinon null pour création
-            variant_name: v.variant_name || "Standard", // Default name if empty
-            unit: v.unit,
-            price: parseFloat(v.price) || 0,
-            is_available: v.is_available,
-            is_default: v.is_default,
-            position: i + 1
+            id: v.id, variant_name: v.variant_name || "Standard", unit: v.unit,
+            price: parseFloat(v.price) || 0, is_available: v.is_available, is_default: v.is_default, position: i + 1
           }));
           await apiRequest(`/products/${editingProduct.id}`, "PUT", payload);
         } else {
-          // Mode CRÉATION : L'API Python attend une variante "racine" pour la création simple
-          // On envoie la première variante
           const firstVar = formData.variants[0];
-          payload.variant_name = firstVar.variant_name || "Standard"; // Default if empty
+          payload.variant_name = firstVar.variant_name || "Standard";
           payload.unit = firstVar.unit;
           payload.price = parseFloat(firstVar.price) || 0;
-
           await apiRequest("/products", "POST", payload);
         }
-
         setIsModalOpen(false);
         refreshProducts();
+        addToast(editingProduct ? "Produit modifié" : "Produit créé", "success");
       };
 
       const handleDelete = async (id) => {
-        if (window.confirm("Supprimer ce produit et ses variantes ?")) {
+        if (window.confirm("Supprimer ce produit ?")) {
           await apiRequest(`/products/${id}`, "DELETE");
           refreshProducts();
+          addToast("Produit supprimé", "info");
         }
       };
 
       const sortedProducts = useMemo(() => {
         let data = [...products];
-        if (sortType === "price_asc") {
-          // Trie par prix de la variante par défaut (ou la première)
-          data.sort((a, b) => {
-            const priceA = a.variants && a.variants.length > 0 ? a.variants.find(v => v.is_default)?.price || a.variants[0].price : 0;
-            const priceB = b.variants && b.variants.length > 0 ? b.variants.find(v => v.is_default)?.price || b.variants[0].price : 0;
-            return priceA - priceB;
-          });
-        }
-        if (sortType === "price_desc") {
-          data.sort((a, b) => {
-            const priceA = a.variants && a.variants.length > 0 ? a.variants.find(v => v.is_default)?.price || a.variants[0].price : 0;
-            const priceB = b.variants && b.variants.length > 0 ? b.variants.find(v => v.is_default)?.price || b.variants[0].price : 0;
-            return priceB - priceA;
-          });
-        }
+        if (sortType === "price_asc") data.sort((a, b) => (a.variants?.find(v => v.is_default)?.price || a.variants[0]?.price || 0) - (b.variants?.find(v => v.is_default)?.price || b.variants[0]?.price || 0));
+        if (sortType === "price_desc") data.sort((a, b) => (b.variants?.find(v => v.is_default)?.price || b.variants[0]?.price || 0) - (a.variants?.find(v => v.is_default)?.price || a.variants[0]?.price || 0));
         return data;
       }, [products, sortType]);
-
-      // Helper pour trouver le prix à afficher
-      const getDisplayPrice = (product) => {
-        if (!product.variants || product.variants.length === 0) return "N/A";
-        const defVar = product.variants.find(v => v.is_default) || product.variants[0];
-        return `${defVar.price} DT / ${defVar.unit}`;
-      }
 
       return (
         <div>
           <div className="flex-between mb-20">
-            <h2>Gestion Produits</h2>
-            <button
-              className="btn btn-primary"
-              onClick={() => handleOpenModal()}
-            >
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Gestion Produits</h2>
+            <button className="btn btn-primary" onClick={() => handleOpenModal()}>
               <i className="fas fa-plus"></i> Ajouter
             </button>
           </div>
 
           <div className="card">
-            <div
-              style={{ display: "flex", gap: "10px", marginBottom: "15px" }}
-            >
-              <select
-                className="input-control"
-                style={{ maxWidth: "200px" }}
-                onChange={(e) => setSortType(e.target.value)}
-              >
+            <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+              <select className="input-control" style={{ maxWidth: "200px" }} onChange={(e) => setSortType(e.target.value)}>
                 <option value="default">Trier par défaut</option>
                 <option value="price_asc">Prix (Croissant)</option>
                 <option value="price_desc">Prix (Décroissant)</option>
@@ -685,58 +675,29 @@
             <table>
               <thead>
                 <tr>
-                  <th>Image</th>
-                  <th>Produit</th>
-                  <th>Catégorie</th>
-                  <th>Goût</th>
-                  <th>Prix (Par défaut)</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
+                  <th>Image</th><th>Produit</th><th>Catégorie</th><th>Goût</th><th>Prix</th><th>Statut</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedProducts.map((p) => (
                   <tr key={p.id}>
                     <td>
-                      {p.image ? (
-                        <img src={p.image} alt={p.name} className="product-thumb" />
-                      ) : (
-                        <div className="product-thumb" style={{ background: '#333' }}></div>
-                      )}
+                      {p.image ? <img src={p.image} alt={p.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} /> : <div style={{ width: '50px', height: '50px', background: '#333', borderRadius: '6px' }}></div>}
+                    </td>
+                    <td><strong>{p.name}</strong></td>
+                    <td><span className="badge primary">{p.category}</span></td>
+                    <td>{p.taste}</td>
+                    <td style={{ color: "var(--accent)", fontWeight: "bold" }}>
+                      {p.variants?.find(v => v.is_default)?.price || p.variants[0]?.price} DT
                     </td>
                     <td>
-                      <strong>{p.name}</strong>
-                    </td>
-                    <td>
-                      <span className={`badge badge-primary`}>
-                        {(p.category || "").toUpperCase()}
-                      </span>
-                    </td>
-                    <td>{p.taste || "-"}</td>
-                    <td
-                      style={{ color: "var(--accent)", fontWeight: "bold" }}
-                    >
-                      {getDisplayPrice(p)}
-                    </td>
-                    <td>
-                      <span className={`badge ${p.is_active ? 'badge-success' : 'badge-danger'}`}>
+                      <span className={`badge ${p.is_active ? 'success' : 'danger'}`}>
                         {p.is_active ? "Actif" : "Inactif"}
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="btn btn-edit btn-sm"
-                        onClick={() => handleOpenModal(p)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        style={{ marginLeft: "5px" }}
-                        onClick={() => handleDelete(p.id)}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      <button className="btn btn-icon" style={{ background: '#374151', color: 'white', marginRight: '5px' }} onClick={() => handleOpenModal(p)}><i className="fas fa-edit"></i></button>
+                      <button className="btn btn-icon btn-danger" onClick={() => handleDelete(p.id)}><i className="fas fa-trash"></i></button>
                     </td>
                   </tr>
                 ))}
@@ -745,147 +706,49 @@
           </div>
 
           {isModalOpen && (
-            <Modal
-              onClose={() => setIsModalOpen(false)}
-              title={editingProduct ? "Modifier Produit" : "Ajouter Produit"}
-              size="lg"
-            >
+            <Modal onClose={() => setIsModalOpen(false)} title={editingProduct ? "Modifier Produit" : "Ajouter Produit"} size="lg">
               <form onSubmit={handleSubmit}>
-                {/* Section Info Produit */}
-                <div className="input-group">
-                  <label>Image du produit</label>
-                  <input
-                    type="file"
-                    className="input-control"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                  {formData.image && (
-                    <div className="preview-container">
-                      <img src={formData.image} alt="Aperçu" />
-                    </div>
-                  )}
+                <div className="variant-row">
+                  <label>Image</label>
+                  <input type="file" className="input-control" accept="image/*" onChange={handleImageUpload} />
+                  {formData.image && <div style={{ marginTop: '10px', textAlign: 'center' }}><img src={formData.image} alt="preview" style={{ maxHeight: '100px' }} /></div>}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div className="input-group">
-                    <label>Nom du produit</label>
-                    <input className="input-control" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-                  </div>
-                  <div className="input-group">
-                    <label>Catégorie</label>
-                    <select className="input-control" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
-                      <option value="snack">Snack</option>
-                      <option value="plat">Plat</option>
-                      <option value="salade">Salade</option>
-                    </select>
-                  </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: '15px' }}>
+                  <input className="input-control" placeholder="Nom" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                  <select className="input-control" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                    <option value="snack">Snack</option><option value="plat">Plat</option><option value="salade">Salade</option>
+                  </select>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div className="input-group">
-                    <label>Goût</label>
-                    <select className="input-control" value={formData.taste} onChange={(e) => setFormData({ ...formData, taste: e.target.value })}>
-                      <option value="sale">Salé</option>
-                      <option value="sucré">Sucré</option>
-                    </select>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: '15px' }}>
+                  <select className="input-control" value={formData.taste} onChange={e => setFormData({ ...formData, taste: e.target.value })}>
+                    <option value="sale">Salé</option><option value="sucré">Sucré</option>
+                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({ ...formData, is_active: e.target.checked })} /> <span>Actif</span>
                   </div>
-                  <div className="input-group">
-                    <label>Disponibilité Produit</label>
-                    <div style={{ display: "flex", alignItems: "center", height: "40px" }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.is_active}
-                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                      <span style={{ marginLeft: "10px", color: "var(--text-muted)" }}>Actif</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="input-group">
-                  <label>Description</label>
-                  <textarea className="input-control" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}></textarea>
                 </div>
 
-                <hr style={{ borderColor: "var(--border)", margin: "20px 0" }} />
-
-                {/* Section Variantes */}
-                <h4 style={{ marginBottom: "15px" }}>Variantes</h4>
+                <h4 style={{ margin: '20px 0 10px' }}>Variantes</h4>
                 {formData.variants.map((v, idx) => (
                   <div key={idx} className="variant-row">
-                    <div className="variant-header">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                       <span>Variante #{idx + 1}</span>
-                      {formData.variants.length > 1 && (
-                        <button type="button" className="btn btn-danger btn-sm" onClick={() => removeVariant(idx)}>
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      )}
+                      {formData.variants.length > 1 && <button type="button" className="btn btn-icon btn-danger" onClick={() => removeVariant(idx)}><i className="fas fa-trash"></i></button>}
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "10px" }}>
-                      <div>
-                        <input
-                          className="input-control"
-                          placeholder="Nom (ex: Grande, 10cm)"
-                          value={v.variant_name}
-                          onChange={(e) => handleVariantChange(idx, "variant_name", e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <select
-                          className="input-control"
-                          value={v.unit}
-                          onChange={(e) => handleVariantChange(idx, "unit", e.target.value)}
-                        >
-                          <option value="piece">Pièce</option>
-                          <option value="kilo">Kilo</option>
-                          <option value="personne">Personne</option>
-                        </select>
-                      </div>
-                      <div>
-                        <input
-                          type="number"
-                          className="input-control"
-                          placeholder="Prix"
-                          value={v.price}
-                          onChange={(e) => handleVariantChange(idx, "price", e.target.value)}
-                        />
-                      </div>
+                      <input className="input-control" placeholder="Nom (ex: Grande)" value={v.variant_name} onChange={e => handleVariantChange(idx, "variant_name", e.target.value)} />
+                      <select className="input-control" value={v.unit} onChange={e => handleVariantChange(idx, "unit", e.target.value)}><option value="piece">Pièce</option><option value="kilo">Kilo</option><option value="personne">Pers.</option></select>
+                      <input type="number" className="input-control" placeholder="Prix" value={v.price} onChange={e => handleVariantChange(idx, "price", e.target.value)} />
                     </div>
-                    <div className="mt-10" style={{ display: "flex", gap: "20px" }}>
-                      <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-                        <input
-                          type="checkbox"
-                          checked={v.is_available}
-                          onChange={(e) => handleVariantChange(idx, "is_available", e.target.checked)}
-                          style={{ width: "16px", height: "16px" }}
-                        /> Disponible
-                      </label>
-                      <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-                        <input
-                          type="radio"
-                          name="defaultVariant"
-                          checked={v.is_default}
-                          onChange={() => {
-                            const newVars = formData.variants.map((vv, i) => ({ ...vv, is_default: i === idx }));
-                            setFormData({ ...formData, variants: newVars });
-                          }}
-                          style={{ width: "16px", height: "16px" }}
-                        /> Par défaut
-                      </label>
+                    <div style={{ marginTop: '10px', display: 'flex', gap: '20px' }}>
+                      <label><input type="checkbox" checked={v.is_available} onChange={e => handleVariantChange(idx, "is_available", e.target.checked)} /> Disponible</label>
+                      <label><input type="radio" name="defVar" checked={v.is_default} onChange={() => setFormData({ ...formData, variants: formData.variants.map((vv, i) => ({ ...vv, is_default: i === idx })) })} /> Par défaut</label>
                     </div>
                   </div>
                 ))}
+                <button type="button" className="btn" style={{ width: '100%', background: '#374151', color: 'white', marginBottom: '20px' }} onClick={addVariant}><i className="fas fa-plus"></i> Ajouter une variante</button>
 
-                <button type="button" className="btn btn-edit mb-20" onClick={addVariant}>
-                  <i className="fas fa-plus"></i> Ajouter une variante
-                </button>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ width: "100%" }}
-                >
-                  {editingProduct ? "Mettre à jour" : "Créer Produit"}
-                </button>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingProduct ? "Mettre à jour" : "Créer"}</button>
               </form>
             </Modal>
           )}
@@ -893,11 +756,11 @@
       );
     };
 
-    // --- 2. GESTION VILLES (Inchangée) ---
+    // --- 2. GESTION VILLES ---
     const CityManager = ({ cities, setCities }) => {
-      const [isModalOpen, setIsModalOpen] = React.useState(false);
-      const [editingCity, setEditingCity] = React.useState(null);
-      const [formData, setFormData] = React.useState({ name: "", delivery_fee: "" });
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [editingCity, setEditingCity] = useState(null);
+      const [formData, setFormData] = useState({ name: "", delivery_fee: "" });
 
       const refreshCities = async () => {
         const data = await apiRequest("/cities");
@@ -905,29 +768,16 @@
       };
 
       const handleOpenModal = (city = null) => {
-        if (city) {
-          setEditingCity(city);
-          setFormData({ name: city.name, delivery_fee: city.delivery_fee });
-        } else {
-          setEditingCity(null);
-          setFormData({ name: "", delivery_fee: "" });
-        }
+        if (city) { setEditingCity(city); setFormData({ name: city.name, delivery_fee: city.delivery_fee }); }
+        else { setEditingCity(null); setFormData({ name: "", delivery_fee: "" }); }
         setIsModalOpen(true);
       };
 
       const handleSubmit = async (e) => {
         e.preventDefault();
-        const payload = {
-          name: formData.name,
-          delivery_fee: parseFloat(formData.delivery_fee),
-          is_active: true,
-        };
-
-        if (editingCity) {
-          await apiRequest(`/cities/${editingCity.id}`, "PUT", payload);
-        } else {
-          await apiRequest("/cities", "POST", payload);
-        }
+        const payload = { name: formData.name, delivery_fee: parseFloat(formData.delivery_fee), is_active: true };
+        if (editingCity) await apiRequest(`/cities/${editingCity.id}`, "PUT", payload);
+        else await apiRequest("/cities", "POST", payload);
         setIsModalOpen(false);
         refreshCities();
       };
@@ -943,96 +793,32 @@
         <div>
           <div className="flex-between mb-20">
             <h2>Gestion Villes</h2>
-            <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-              <i className="fas fa-plus"></i> Ajouter
-            </button>
+            <button className="btn btn-primary" onClick={() => handleOpenModal()}><i className="fas fa-plus"></i> Ajouter</button>
           </div>
-
           <div className="card">
             <table>
-              <thead>
-                <tr>
-                  <th>Ville</th>
-                  <th>Frais (DT)</th>
-                  <th>Statut</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Ville</th><th>Frais (DT)</th><th>Statut</th><th>Actions</th></tr></thead>
               <tbody>
                 {cities.map((c) => (
                   <tr key={c.id}>
                     <td>{c.name}</td>
                     <td>{c.delivery_fee} DT</td>
+                    <td><span style={{ color: "var(--success)" }}>{c.is_active ? "Actif" : "Inactif"}</span></td>
                     <td>
-                      <span style={{ color: "var(--success)" }}>
-                        {c.is_active !== undefined
-                          ? c.is_active
-                            ? "Actif"
-                            : "Inactif"
-                          : c.isActive
-                            ? "Actif"
-                            : "Inactif"}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-edit"
-                        onClick={() => handleOpenModal(c)}
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: "4px 8px", marginLeft: "5px" }}
-                        onClick={() => handleDelete(c.id)}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      <button className="btn btn-icon" style={{ background: '#374151', color: 'white', marginRight: '5px' }} onClick={() => handleOpenModal(c)}><i className="fas fa-edit"></i></button>
+                      <button className="btn btn-icon btn-danger" onClick={() => handleDelete(c.id)}><i className="fas fa-trash"></i></button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
           {isModalOpen && (
-            <Modal
-              onClose={() => setIsModalOpen(false)}
-              title={editingCity ? "Modifier Ville" : "Ajouter Ville"}
-            >
+            <Modal onClose={() => setIsModalOpen(false)} title={editingCity ? "Modifier Ville" : "Ajouter Ville"}>
               <form onSubmit={handleSubmit}>
-                <div className="input-group">
-                  <label>Nom de la ville</label>
-                  <input
-                    className="input-control"
-                    required
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="input-group">
-                  <label>Frais de livraison (DT)</label>
-                  <input
-                    type="number"
-                    className="input-control"
-                    required
-                    value={formData.delivery_fee}
-                    onChange={(e) =>
-                      setFormData({ ...formData, delivery_fee: e.target.value })
-                    }
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ width: "100%" }}
-                >
-                  {editingCity ? "Modifier" : "Créer"}
-                </button>
+                <div className="mb-20"><label>Nom</label><input className="input-control" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} /></div>
+                <div className="mb-20"><label>Frais (DT)</label><input type="number" className="input-control" required value={formData.delivery_fee} onChange={e => setFormData({ ...formData, delivery_fee: e.target.value })} /></div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingCity ? "Modifier" : "Créer"}</button>
               </form>
             </Modal>
           )}
@@ -1040,44 +826,28 @@
       );
     };
 
-
-    // --- 3. GESTION COMMANDES (Inchangée) ---
+    // --- 3. GESTION COMMANDES (STYLE DYNAMIQUE) ---
     const OrderManager = ({ orders, setOrders, cities }) => {
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [editingOrder, setEditingOrder] = useState(null);
       const [sortType, setSortType] = useState("default");
       const [formData, setFormData] = useState({
-        customer_name: "",
-        customer_phone: "",
-        customer_email: "",
-        delivery_address: "",
-        total: "",
-        city_id: "",
-        status: "En attente",
+        customer_name: "", customer_phone: "", customer_email: "", delivery_address: "", total: "", city_id: "", status: "En attente",
       });
 
       const refreshOrders = async () => {
         const data = await apiRequest("/orders");
         if (data) setOrders(data);
-      }
+      };
 
       const resetForm = () => ({
-        customer_name: "",
-        customer_phone: "",
-        customer_email: "",
-        delivery_address: "",
-        total: "",
-        city_id: "",
-        status: "En attente",
+        customer_name: "", customer_phone: "", customer_email: "", delivery_address: "", total: "", city_id: "", status: "En attente",
       });
 
       const handleOpenModal = (order = null) => {
         if (order) {
           setEditingOrder(order);
-          setFormData({
-            ...order,
-            city_id: order.city_id || "",
-          });
+          setFormData({ ...order, total: order.total_price || order.total || 0, city_id: order.city_id || "", });
         } else {
           setEditingOrder(null);
           setFormData(resetForm());
@@ -1087,375 +857,436 @@
 
       const handleSubmit = async (e) => {
         e.preventDefault();
-        const payload = {
-          ...formData,
-          total: parseFloat(formData.total),
-        };
-
-        if (editingOrder) {
-          await apiRequest(`/orders/${editingOrder.id}`, "PUT", payload);
-        } else {
-          await apiRequest("/orders", "POST", payload);
-        }
-
+        const payload = { ...formData, total: parseFloat(formData.total) };
+        if (editingOrder) await apiRequest(`/orders/${editingOrder.id}`, "PUT", payload);
+        else await apiRequest("/orders", "POST", payload);
         setIsModalOpen(false);
         refreshOrders();
+        addToast("Commande enregistrée", "success");
       };
 
       const handleDelete = async (id) => {
         if (window.confirm("Supprimer cette commande ?")) {
           await apiRequest(`/orders/${id}`, "DELETE");
           refreshOrders();
+          addToast("Commande supprimée", "info");
         }
       };
 
       const sortedOrders = useMemo(() => {
         let data = [...orders];
-        if (sortType === "price_asc") data.sort((a, b) => a.total - b.total);
-        if (sortType === "price_desc") data.sort((a, b) => b.total - a.total);
+        if (sortType === "price_asc") data.sort((a, b) => (a.total_price || a.total || 0) - (b.total_price || b.total || 0));
+        if (sortType === "price_desc") data.sort((a, b) => (b.total_price || b.total || 0) - (a.total_price || a.total || 0));
         return data;
       }, [orders, sortType]);
 
       const getStatusBadge = (status) => {
-        let cls = "badge-default";
-        if (status === "Livré") cls = "badge-success";
-        if (status === "En attente") cls = "badge-warning";
-        if (status === "Annulé") cls = "badge-danger";
-        return <span className={`badge ${cls}`}>{status}</span>;
+        let icon = "fa-clock";
+        let cls = "warning";
+        if (status === "Livré") { icon = "fa-check"; cls = "success"; }
+        if (status === "En préparation") { icon = "fa-fire"; cls = "primary"; } // Jaune
+        if (status === "Annulé") { icon = "fa-ban"; cls = "danger"; }
+
+        return (
+          <span className={`badge ${cls}`}>
+            <i className={`fas ${icon}`}></i> {status}
+          </span>
+        );
       };
 
-      // Génération de facture HTML imprimable
       const generateInvoice = (order) => {
-        const invoiceWindow = window.open('', '_blank');
+        const win = window.open('', '_blank');
         const items = order.items || [];
-        const itemsHtml = items.map(item => `
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.product_name || 'Produit #' + item.product_id}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity} ${item.unit}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${(item.price || 0).toFixed(2)} DT</td>
-          </tr>
-        `).join('');
+        const subtotal = items.reduce((sum, item) => sum + (item.price || 0), 0);
+        const deliveryFee = order.delivery_fee || 0;
+        const total = order.total_price || (subtotal + deliveryFee) || 0;
+        const date = new Date(order.created_at || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-        const invoiceHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Facture #${order.id} - OHMEALS</title>
-            <meta charset="UTF-8">
-            <style>
-              * { margin: 0; padding: 0; box-sizing: border-box; }
-              body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
-              .invoice { max-width: 800px; margin: auto; background: #fff; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-              .header { display: flex; justify-content: space-between; border-bottom: 3px solid #ffbe33; padding-bottom: 20px; margin-bottom: 30px; }
-              .logo { font-size: 28px; font-weight: bold; color: #ffbe33; }
-              .invoice-number { text-align: right; }
-              .invoice-number h2 { color: #333; font-size: 20px; }
-              .info-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
-              .info-block h3 { color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; }
-              .info-block p { color: #333; margin: 4px 0; }
-              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-              thead { background: #ffbe33; color: #fff; }
-              th { padding: 12px 8px; text-align: left; }
-              th:last-child { text-align: right; }
-              .total-row { font-weight: bold; font-size: 18px; }
-              .total-row td { padding-top: 15px; border-top: 2px solid #333; }
-              .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
-              @media print { body { padding: 0; background: #fff; } .invoice { box-shadow: none; } .no-print { display: none; } }
-              .print-btn { background: #ffbe33; color: #fff; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 5px; margin-bottom: 20px; }
-            </style>
-          </head>
-          <body>
-            <div style="text-align: center;" class="no-print">
-              <button class="print-btn" onclick="window.print()">🖨️ Imprimer la facture</button>
-            </div>
-            <div class="invoice">
-              <div class="header">
-                <div class="logo">🍽️ OHMEALS</div>
-                <div class="invoice-number">
-                  <h2>FACTURE</h2>
-                  <p>#${String(order.id).padStart(5, '0')}</p>
-                  <p style="color: #666; font-size: 12px;">${new Date(order.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
-                </div>
+        const itemsHtml = items.map(item => {
+          const unitPrice = item.quantity > 0 ? (item.price / item.quantity) : 0;
+          return `
+            <tr>
+              <td>
+                <div class="item-name">${item.product_name || 'Produit sans nom'}</div>
+                <div class="item-unit">${item.unit}</div>
+              </td>
+              <td class="text-center">${item.quantity}</td>
+              <td class="text-right">${unitPrice.toFixed(2)} DT</td> 
+              <td class="text-right font-bold">${(item.price || 0).toFixed(2)} DT</td>
+            </tr>`;
+        }).join('');
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="fr">
+            <head>
+              <meta charset="UTF-8">
+              <title>Facture #${String(order.id).padStart(5, '0')} - OHMEALS</title>
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                
+                :root {
+                  --primary: #cba719;
+                  --secondary: #1e1e1e;
+                  --text: #374151;
+                  --light: #f3f4f6;
+                  --border: #e5e7eb;
+                }
+                
+                body {
+                  font-family: 'Inter', sans-serif;
+                  color: var(--text);
+                  background: #fff;
+                  margin: 0;
+                  padding: 40px;
+                  font-size: 14px;
+                  line-height: 1.5;
+                  -webkit-print-color-adjust: exact;
+                }
+                
+                .invoice-container {
+                  max-width: 800px;
+                  margin: 0 auto;
+                }
+                
+                /* HEADER */
+                header {
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 40px;
+                  padding-bottom: 20px;
+                  border-bottom: 2px solid var(--primary);
+                }
+                
+                .brand {
+                  font-size: 28px;
+                  font-weight: 800;
+                  color: var(--secondary);
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                }
+                .brand span { color: var(--primary); }
+                
+                .invoice-details {
+                  text-align: right;
+                }
+                .invoice-title {
+                  font-size: 18px;
+                  font-weight: 700;
+                  color: var(--primary);
+                  text-transform: uppercase;
+                  letter-spacing: 1px;
+                }
+                .invoice-number {
+                  font-size: 16px;
+                  font-weight: 600;
+                  margin-top: 5px;
+                }
+                .invoice-date {
+                  color: #6b7280;
+                  margin-top: 5px;
+                }
+                
+                /* INFO SECTIONS */
+                .billing-info {
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 40px;
+                }
+                
+                .info-box h3 {
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  color: #9ca3af;
+                  margin-bottom: 10px;
+                  letter-spacing: 0.5px;
+                  font-weight: 700;
+                }
+                
+                .info-box p {
+                  margin: 4px 0;
+                  font-weight: 500;
+                }
+                .info-box .address {
+                  color: #6b7280;
+                  width: 250px;
+                  line-height: 1.6;
+                }
+                
+                /* TABLE */
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  margin-bottom: 30px;
+                }
+                
+                th {
+                  text-align: left;
+                  padding: 12px;
+                  background: var(--light);
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  color: #6b7280;
+                  font-weight: 700;
+                  border-radius: 4px;
+                }
+                
+                td {
+                  padding: 16px 12px;
+                  border-bottom: 1px solid var(--border);
+                  vertical-align: top;
+                }
+                
+                .item-name { font-weight: 600; color: var(--secondary); font-size: 14px; }
+                .item-unit { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+                
+                .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .font-bold { font-weight: 700; }
+                
+                /* TOTALS */
+                .totals {
+                  width: 300px;
+                  margin-left: auto;
+                }
+                
+                .total-row {
+                  display: flex;
+                  justify-content: space-between;
+                  padding: 8px 0;
+                  border-bottom: 1px solid var(--border);
+                }
+                
+                .total-row.final {
+                  border-bottom: none;
+                  border-top: 2px solid var(--secondary);
+                  margin-top: 10px;
+                  padding-top: 15px;
+                  font-size: 20px;
+                  font-weight: 800;
+                  color: var(--primary);
+                }
+                
+                /* FOOTER */
+                footer {
+                  margin-top: 60px;
+                  text-align: center;
+                  color: #9ca3af;
+                  font-size: 12px;
+                  border-top: 1px solid var(--border);
+                  padding-top: 30px;
+                }
+                
+                /* PRINT BUTTON */
+                .no-print {
+                  text-align: center;
+                  margin-bottom: 30px;
+                }
+                .btn-print {
+                  background: var(--secondary);
+                  color: #fff;
+                  border: none;
+                  padding: 12px 25px;
+                  border-radius: 30px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                  transition: 0.2s;
+                  font-family: inherit;
+                  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                }
+                .btn-print:hover { background: var(--primary); transform: translateY(-2px); }
+                
+                @media print {
+                  .no-print { display: none; }
+                  body { padding: 0; background: #fff; }
+                  .invoice-container { max-width: 100%; margin: 0; }
+                  header { margin-bottom: 20px; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="no-print">
+                <button class="btn-print" onclick="window.print()">
+                  🖨️ Imprimer la facture
+                </button>
               </div>
               
-              <div class="info-section">
-                <div class="info-block">
-                  <h3>Client</h3>
-                  <p><strong>${order.customer_name}</strong></p>
-                  <p>📞 ${order.customer_phone}</p>
-                  ${order.customer_email ? '<p>✉️ ' + order.customer_email + '</p>' : ''}
+              <div class="invoice-container">
+                <header>
+                  <div class="brand">
+                    <span>⚡</span> OHMEALS
+                  </div>
+                  <div class="invoice-details">
+                    <div class="invoice-title">Facture</div>
+                    <div class="invoice-number">#${String(order.id).padStart(5, '0')}</div>
+                    <div class="invoice-date">${date}</div>
+                  </div>
+                </header>
+                
+                <div class="billing-info">
+                  <div class="info-box">
+                    <h3>Émetteur</h3>
+                    <p><strong>OHMEALS Traiteur</strong></p>
+                    <p class="address">Spécialités Marocaines Authentiques<br>Tunis, Tunisie</p>
+                    <p>contact@ohmeals.com</p>
+                    <p>📞 +216 12 345 678</p>
+                  </div>
+                  <div class="info-box">
+                    <h3>Facturé à</h3>
+                    <p><strong>${order.customer_name}</strong></p>
+                    <p class="address">${order.delivery_address}</p>
+                    <p>📞 ${order.customer_phone}</p>
+                    ${order.customer_email ? `<p>✉️ ${order.customer_email}</p>` : ''}
+                  </div>
                 </div>
-                <div class="info-block">
-                  <h3>Livraison</h3>
-                  <p>📍 ${order.delivery_address}</p>
+                
+                <table>
+                  <thead>
+                    <tr>
+                      <th width="40%">Description</th>
+                      <th width="15%" class="text-center">Quantité</th>
+                      <th width="20%" class="text-right">Prix Unitaire</th>
+                      <th width="25%" class="text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsHtml}
+                  </tbody>
+                </table>
+                
+                <div class="totals">
+                  <div class="total-row">
+                    <span>Sous-total</span>
+                    <span>${subtotal.toFixed(2)} DT</span>
+                  </div>
+                  <div class="total-row">
+                    <span>Livraison</span>
+                    <span>${parseFloat(deliveryFee).toFixed(2)} DT</span>
+                  </div>
+                  <div class="total-row final">
+                    <span>Total à Payer</span>
+                    <span>${total.toFixed(2)} DT</span>
+                  </div>
                 </div>
+                
+                <footer>
+                  <p>Merci de votre confiance ! Bon appétit 🥘</p>
+                  <p style="margin-top: 5px;">OHMEALS - RC: 123456789 - MF: 000/M/A/000</p>
+                </footer>
               </div>
+            </body>
+            </html>
+          `;
 
-              <table>
-                <thead>
-                  <tr>
-                    <th>Produit</th>
-                    <th style="text-align: center;">Quantité</th>
-                    <th style="text-align: right;">Prix</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${itemsHtml}
-                </tbody>
-                <tfoot>
-                  <tr class="total-row">
-                    <td colspan="2">TOTAL</td>
-                    <td style="text-align: right;">${(order.total_price || order.total || 0).toFixed(2)} DT</td>
-                  </tr>
-                </tfoot>
-              </table>
-
-              <div class="footer">
-                <p>Merci pour votre commande chez OHMEALS !</p>
-                <p>Traiteur Marocain - Saveurs authentiques</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
-
-        invoiceWindow.document.write(invoiceHtml);
-        invoiceWindow.document.close();
+        win.document.write(htmlContent);
+        win.document.close();
       };
 
       return (
         <div>
           <div className="flex-between mb-20">
-            <h2>Liste des Commandes</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Commandes</h2>
             <div style={{ display: "flex", gap: "10px" }}>
-              <select
-                className="input-control"
-                style={{ maxWidth: "200px" }}
-                onChange={(e) => setSortType(e.target.value)}
-              >
-                <option value="default">Trier par défaut</option>
-                <option value="price_asc">Montant (Croissant)</option>
-                <option value="price_desc">Montant (Décroissant)</option>
+              <select className="input-control" style={{ maxWidth: "200px" }} onChange={(e) => setSortType(e.target.value)}>
+                <option value="default">Récent</option>
+                <option value="price_asc">Montant ↑</option>
+                <option value="price_desc">Montant ↓</option>
               </select>
-              <button
-                className="btn btn-primary"
-                onClick={() => handleOpenModal()}
-              >
-                <i className="fas fa-plus"></i> Nouvelle
-              </button>
+              <a href="/api/export/orders" target="_blank" className="btn" style={{ background: 'var(--success)', color: 'white', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                <i className="fas fa-file-csv"></i> Exporter
+              </a>
+              <button className="btn btn-primary" onClick={() => handleOpenModal()}><i className="fas fa-plus"></i> Nouvelle</button>
             </div>
           </div>
-          <div className="card">
+
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Client</th>
-                  <th>Téléphone</th>
+                  <th style={{ paddingLeft: '24px' }}>Client & Details</th>
                   <th>Produits</th>
                   <th>Montant</th>
                   <th>Statut</th>
-                  <th>Actions</th>
+                  <th style={{ textAlign: 'right', paddingRight: '24px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedOrders.map((o) => (
-                  <tr key={o.id}>
-                    <td>
-                      <strong>{o.customer_name}</strong>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "var(--text-muted)",
-                        }}
-                      >
-                        {o.delivery_address}
+                  <tr key={o.id} className="order-row">
+                    <td style={{ paddingLeft: '24px' }}>
+                      <div style={{ fontWeight: '600', fontSize: '1rem' }}>{o.customer_name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        <i className="fas fa-map-marker-alt"></i> {o.delivery_address}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        <i className="fas fa-phone"></i> {o.customer_phone}
                       </div>
                     </td>
-                    <td>{o.customer_phone}</td>
                     <td>
                       {o.items && o.items.length > 0 ? (
-                        <div style={{ fontSize: "0.85rem" }}>
+                        <div>
                           {o.items.map((item, idx) => (
-                            <div key={idx} style={{ marginBottom: "4px", padding: "2px 0", borderBottom: idx < o.items.length - 1 ? "1px dashed var(--border)" : "none" }}>
-                              <span style={{ fontWeight: "500" }}>{item.product_name || `Produit #${item.product_id}`}</span>
-                              <span style={{ color: "var(--text-muted)", marginLeft: "8px" }}>
-                                x{item.quantity} {item.unit}
-                              </span>
-                              <span style={{ color: "var(--accent)", marginLeft: "8px", fontWeight: "bold" }}>
-                                {(item.price || 0).toFixed(2)} DT
-                              </span>
+                            <div key={idx} className="order-product-item">
+                              <span>{item.product_name}</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: 'auto' }}>x{item.quantity}</span>
                             </div>
                           ))}
                         </div>
-                      ) : (
-                        <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Aucun produit</span>
-                      )}
+                      ) : <span style={{ color: 'var(--text-muted)' }}>Aucun produit</span>}
                     </td>
-                    <td
-                      style={{ color: "var(--accent)", fontWeight: "bold" }}
-                    >
-                      {(o.total_price || o.total || 0).toFixed(2)} DT
+                    <td>
+                      <div className="order-total-price">
+                        {(o.total_price || o.total || 0).toFixed(2)} DT
+                      </div>
                     </td>
                     <td>{getStatusBadge(o.status)}</td>
-                    <td>
-                      <button
-                        className="btn btn-edit"
-                        style={{ padding: "4px 8px" }}
-                        onClick={() => handleOpenModal(o)}
-                        title="Modifier"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className="btn"
-                        style={{ padding: "4px 8px", marginLeft: "5px", background: "#17a2b8", color: "#fff" }}
-                        onClick={() => generateInvoice(o)}
-                        title="Facture"
-                      >
-                        <i className="fas fa-file-invoice"></i>
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: "4px 8px", marginLeft: "5px" }}
-                        onClick={() => handleDelete(o.id)}
-                        title="Supprimer"
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                    <td style={{ textAlign: 'right', paddingRight: '24px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <button className="btn btn-icon" style={{ background: '#374151', color: 'white' }} onClick={() => handleOpenModal(o)} title="Modifier">
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button className="btn btn-icon btn-invoice" onClick={() => generateInvoice(o)} title="Facture">
+                          <i className="fas fa-file-invoice"></i>
+                        </button>
+                        <button className="btn btn-icon btn-danger" onClick={() => handleDelete(o.id)} title="Supprimer">
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {orders.length === 0 && <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Aucune commande trouvée</div>}
           </div>
 
           {isModalOpen && (
-            <Modal
-              onClose={() => setIsModalOpen(false)}
-              title={
-                editingOrder ? "Modifier Commande" : "Créer une Commande"
-              }
-            >
+            <Modal onClose={() => setIsModalOpen(false)} title={editingOrder ? "Modifier Commande" : "Nouvelle Commande"}>
               <form onSubmit={handleSubmit}>
-                {/* Infos client - lecture seule en modification */}
-                <div className="input-group">
-                  <label>Nom du Client</label>
-                  <input
-                    type="text"
-                    className="input-control"
-                    required
-                    value={formData.customer_name}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        customer_name: e.target.value,
-                      })
-                    }
-                    disabled={!!editingOrder}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                  <div><label>Nom Client</label><input type="text" className="input-control" required value={formData.customer_name} onChange={e => setFormData({ ...formData, customer_name: e.target.value })} disabled={!!editingOrder} /></div>
+                  <div><label>Téléphone</label><input type="text" className="input-control" required value={formData.customer_phone} onChange={e => setFormData({ ...formData, customer_phone: e.target.value })} disabled={!!editingOrder} /></div>
                 </div>
-                <div className="input-group">
-                  <label>Téléphone</label>
-                  <input
-                    type="text"
-                    className="input-control"
-                    required
-                    value={formData.customer_phone}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        customer_phone: e.target.value,
-                      })
-                    }
-                    disabled={!!editingOrder}
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    className="input-control"
-                    value={formData.customer_email}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        customer_email: e.target.value,
-                      })
-                    }
-                    disabled={!!editingOrder}
-                  />
-                </div>
-                <div className="input-group">
-                  <label>Adresse de Livraison</label>
-                  <textarea
-                    className="input-control"
-                    required
-                    value={formData.delivery_address}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        delivery_address: e.target.value,
-                      })
-                    }
-                    placeholder="Rue, Quartier, Code postal..."
-                    disabled={!!editingOrder}
-                  ></textarea>
-                </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <div className="input-group" style={{ flex: 1 }}>
-                    <label>Ville {editingOrder && "(éditable)"}</label>
-                    <select
-                      className="input-control"
-                      required
-                      value={formData.city_id}
-                      onChange={(e) =>
-                        setFormData({ ...formData, city_id: e.target.value })
-                      }
-                    >
-                      <option value="">Sélectionner...</option>
-                      {cities.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
+                <div className="mb-20"><label>Adresse</label><textarea className="input-control" required value={formData.delivery_address} onChange={e => setFormData({ ...formData, delivery_address: e.target.value })} disabled={!!editingOrder}></textarea></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                  <div><label>Ville</label>
+                    <select className="input-control" required value={formData.city_id} onChange={e => setFormData({ ...formData, city_id: e.target.value })} disabled={!!editingOrder}>
+                      <option value="">Selectionner...</option>
+                      {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                  <div className="input-group" style={{ flex: 1 }}>
-                    <label>Montant Total (DT)</label>
-                    <input
-                      type="number"
-                      className="input-control"
-                      required
-                      value={formData.total}
-                      onChange={(e) =>
-                        setFormData({ ...formData, total: e.target.value })
-                      }
-                      disabled={!!editingOrder}
-                    />
-                  </div>
+                  <div><label>Total (DT)</label><input type="number" className="input-control" required value={formData.total} onChange={e => setFormData({ ...formData, total: e.target.value })} disabled={!!editingOrder} /></div>
                 </div>
-                <div className="input-group">
-                  <label>Statut {editingOrder && "(éditable)"}</label>
-                  <select
-                    className="input-control"
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
-                    }
-                  >
-                    <option value="En attente">En attente</option>
-                    <option value="En préparation">En préparation</option>
-                    <option value="Livré">Livré</option>
-                    <option value="Annulé">Annulé</option>
+                <div className="mb-20"><label>Statut</label>
+                  <select className="input-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                    <option value="En attente">En attente</option><option value="En préparation">En préparation</option><option value="Livré">Livré</option><option value="Annulé">Annulé</option>
                   </select>
                 </div>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ width: "100%", marginTop: "10px" }}
-                >
-                  {editingOrder ? "Mettre à jour" : "Enregistrer"}
-                </button>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingOrder ? "Mettre à jour" : "Créer"}</button>
               </form>
             </Modal>
           )}
@@ -1463,331 +1294,278 @@
       );
     };
 
-    // --- 4. GESTION ADMINS (Inchangée) ---
+    // --- 4. GESTION ADMINS ---
     const AdminManager = ({ admins, setAdmins }) => {
-      const [isModalOpen, setIsModalOpen] = React.useState(false);
-      const [editingAdmin, setEditingAdmin] = React.useState(null);
-      const [formData, setFormData] = React.useState({
-        username: "",
-        email: "",
-        password: "",
-      });
-
-      const apiRequest = async (url, method = "GET", data = null) => {
-        try {
-          const options = {
-            method,
-            headers: { "Content-Type": "application/json" }
-          };
-          if (data) options.body = JSON.stringify(data);
-
-          const res = await fetch(url, options);
-          return await res.json();
-        } catch (err) {
-          console.error(err);
-          return null;
-        }
-      };
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [editingAdmin, setEditingAdmin] = useState(null);
+      const [formData, setFormData] = useState({ username: "", email: "", password: "" });
 
       const refreshAdmins = async () => {
-        const data = await apiRequest("/api/admins");
+        const data = await apiRequest("/admins");
         if (data) setAdmins(data);
-      }
+      };
 
       const handleOpenModal = (admin = null) => {
-        if (admin) {
-          setEditingAdmin(admin);
-          setFormData({ username: admin.username, email: admin.email, password: "" });
-        } else {
-          setEditingAdmin(null);
-          setFormData({ username: "", email: "", password: "" });
-        }
+        if (admin) { setEditingAdmin(admin); setFormData({ username: admin.username, email: admin.email, password: "" }); }
+        else { setEditingAdmin(null); setFormData({ username: "", email: "", password: "" }); }
         setIsModalOpen(true);
       };
 
       const handleSubmit = async (e) => {
         e.preventDefault();
         const payload = { username: formData.username, email: formData.email };
-        if (!editingAdmin || formData.password.trim() !== "") {
-          payload.password = formData.password;
-        }
-
-        if (editingAdmin) {
-          await apiRequest(`/api/admins/${editingAdmin.id}`, "PUT", payload);
-        } else {
-          await apiRequest("/api/admins", "POST", payload);
-        }
-
+        if (!editingAdmin || formData.password.trim() !== "") payload.password = formData.password;
+        if (editingAdmin) await apiRequest(`/admins/${editingAdmin.id}`, "PUT", payload);
+        else await apiRequest("/admins", "POST", payload);
         setIsModalOpen(false);
         refreshAdmins();
+        addToast("Admin mis à jour", "success");
       };
 
       const handleDelete = async (id) => {
         if (window.confirm("Supprimer cet admin ?")) {
-          await apiRequest(`/api/admins/${id}`, "DELETE");
+          await apiRequest(`/admins/${id}`, "DELETE");
           refreshAdmins();
         }
       };
 
       return (
         <div>
-          <div className="flex-between mb-20">
-            <h2>Gestion Administrateurs</h2>
-            <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-              <i className="fas fa-plus"></i> Ajouter
-            </button>
-          </div>
-
+          <div className="flex-between mb-20"><h2>Administrateurs</h2><button className="btn btn-primary" onClick={() => handleOpenModal()}><i className="fas fa-plus"></i> Ajouter</button></div>
           <div className="card">
-            <table>
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((a) => (
-                  <tr key={a.id}>
-                    <td>{a.username}</td>
-                    <td>{a.email}</td>
-                    <td>
-                      <button className="btn btn-edit" onClick={() => handleOpenModal(a)}>
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(a.id)}>
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+            <table><thead><tr><th>Username</th><th>Email</th><th>Action</th></tr></thead>
+              <tbody>{admins.map(a => <tr key={a.id}><td>{a.username}</td><td>{a.email}</td><td><button className="btn btn-icon" style={{ background: '#374151', color: 'white', marginRight: '5px' }} onClick={() => handleOpenModal(a)}><i className="fas fa-edit"></i></button><button className="btn btn-icon btn-danger" onClick={() => handleDelete(a.id)}><i className="fas fa-trash"></i></button></td></tr>)}</tbody>
             </table>
           </div>
-
-          {isModalOpen && (
-            <Modal
-              onClose={() => setIsModalOpen(false)}
-              title={editingAdmin ? "Modifier Admin" : "Ajouter un Administrateur"}
-            >
-              <form onSubmit={handleSubmit}>
-                <div className="input-group">
-                  <label>Username</label>
-                  <input type="text" required value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
-                </div>
-                <div className="input-group">
-                  <label>Email</label>
-                  <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                </div>
-                <div className="input-group">
-                  <label>Mot de passe {editingAdmin && "(Laisser vide pour ne pas changer)"}</label>
-                  <input type="password" required={!editingAdmin} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-                </div>
-                <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
-                  {editingAdmin ? "Modifier" : "Créer Admin"}
-                </button>
-              </form>
-            </Modal>
-          )}
+          {isModalOpen && (<Modal onClose={() => setIsModalOpen(false)} title={editingAdmin ? "Modifier Admin" : "Ajouter Admin"}><form onSubmit={handleSubmit}><div className="mb-20"><label>Username</label><input type="text" className="input-control" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} /></div><div className="mb-20"><label>Email</label><input type="email" className="input-control" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} /></div><div className="mb-20"><label>Mot de passe {editingAdmin && "(vide pour inchangé)"}</label><input type="password" className="input-control" required={!editingAdmin} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} /></div><button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingAdmin ? "Modifier" : "Créer"}</button></form></Modal>)}
         </div>
       );
     };
 
+    // --- 5. GESTION PARAMÈTRES SITE ---
+    const SettingsManager = () => {
+      const [settings, setSettings] = useState({});
+      const [loading, setLoading] = useState(false);
+
+      useEffect(() => {
+        const fetchSettings = async () => {
+          setLoading(true);
+          const data = await apiRequest("/settings");
+          if (data) setSettings(data);
+          setLoading(false);
+        };
+        fetchSettings();
+      }, []);
+
+      const handleChange = (key, value) => {
+        setSettings(prev => ({ ...prev, [key]: value }));
+      };
+
+      const handleSave = async (e) => {
+        e.preventDefault();
+        const res = await apiRequest("/settings", "POST", settings);
+        if (res) addToast("Paramètres sauvegardés", "success");
+      };
+
+      if (loading) return <div>Chargement...</div>;
+
+      return (
+        <div>
+          <h2 className="mb-20" style={{ fontSize: '1.5rem', fontWeight: '700' }}>Paramètres du Site</h2>
+          <div className="card">
+            <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{ gridColumn: '1 / -1' }}><h4 style={{ color: 'var(--accent)', marginBottom: '10px' }}>Informations générales</h4></div>
+
+              <div><label>Téléphone</label><input className="input-control" value={settings.phone || ""} onChange={e => handleChange("phone", e.target.value)} /></div>
+              <div><label>Email</label><input className="input-control" value={settings.email || ""} onChange={e => handleChange("email", e.target.value)} /></div>
+              <div style={{ gridColumn: '1 / -1' }}><label>Adresse</label><input className="input-control" value={settings.address || ""} onChange={e => handleChange("address", e.target.value)} /></div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label>Description Accueil (Hero)</label>
+                <textarea className="input-control" rows="3" value={settings.index_description || ""} onChange={e => handleChange("index_description", e.target.value)}></textarea>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label>Description A Propos</label>
+                <textarea className="input-control" rows="3" value={settings.about_description || ""} onChange={e => handleChange("about_description", e.target.value)}></textarea>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}><label>Description Footer</label><textarea className="input-control" rows="3" value={settings.footer_description || ""} onChange={e => handleChange("footer_description", e.target.value)}></textarea></div>
+
+              <div style={{ gridColumn: '1 / -1' }}><h4 style={{ color: 'var(--accent)', marginTop: '10px', marginBottom: '10px' }}>Réseaux Sociaux</h4></div>
+
+              <div><label>Facebook URL</label><input className="input-control" value={settings.facebook_url || ""} onChange={e => handleChange("facebook_url", e.target.value)} /></div>
+              <div><label>Twitter URL</label><input className="input-control" value={settings.twitter_url || ""} onChange={e => handleChange("twitter_url", e.target.value)} /></div>
+              <div><label>Instagram URL</label><input className="input-control" value={settings.instagram_url || ""} onChange={e => handleChange("instagram_url", e.target.value)} /></div>
+              <div><label>LinkedIn URL</label><input className="input-control" value={settings.linkedin_url || ""} onChange={e => handleChange("linkedin_url", e.target.value)} /></div>
+
+              <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
+                <button type="submit" className="btn btn-primary" style={{ padding: '12px 30px' }}><i className="fas fa-save"></i> Sauvegarder les modifications</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
 
     // --- APP PRINCIPALE ---
     const App = () => {
       const [activeView, setActiveView] = useState("dashboard");
       const [loading, setLoading] = useState(true);
-
-      // États initiaux vides
       const [products, setProducts] = useState([]);
       const [orders, setOrders] = useState([]);
       const [cities, setCities] = useState([]);
       const [admins, setAdmins] = useState([]);
+      const [stats, setStats] = useState(null); // New stats state
 
-      // Fetch Initial Data
       useEffect(() => {
-        const initDashboard = async () => {
+        const init = async () => {
           setLoading(true);
-          try {
-            const [pRes, oRes, cRes, aRes] = await Promise.all([
-              apiRequest("/products"),
-              apiRequest("/orders"),
-              apiRequest("/cities"),
-              apiRequest("/admins")
-            ]);
-
-            if (pRes) setProducts(pRes);
-            if (oRes) setOrders(oRes);
-            if (cRes) setCities(cRes);
-            if (aRes) setAdmins(aRes);
-          } catch (error) {
-            console.error("Erreur init dashboard", error);
-          } finally {
-            setLoading(false);
-          }
+          const [pRes, oRes, cRes, aRes, sRes] = await Promise.all([
+            apiRequest("/products"),
+            apiRequest("/orders"),
+            apiRequest("/cities"),
+            apiRequest("/admins"),
+            apiRequest("/stats")
+          ]);
+          if (pRes) setProducts(pRes);
+          if (oRes) setOrders(oRes);
+          if (cRes) setCities(cRes);
+          if (aRes) setAdmins(aRes);
+          if (sRes) setStats(sRes);
+          setLoading(false);
         };
-
-        initDashboard();
+        init();
       }, []);
 
-      const renderView = () => {
-        if (loading) return <div className="loading-spinner"></div>;
+      // Chart Effect
+      useEffect(() => {
+        if (activeView === 'dashboard' && stats && stats.chart_data && !loading) {
+          const ctx = document.getElementById('salesChart');
+          if (ctx) {
+            // Destroy existing chart if needed (simple way: check simple instance or just render)
+            // In React strict mode or re-renders, this might duplicate, but basic implementation:
+            if (window.myChart instanceof Chart) window.myChart.destroy();
 
+            window.myChart = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: stats.chart_data.map(d => d.date),
+                datasets: [{
+                  label: 'Revenus (DT)',
+                  data: stats.chart_data.map(d => d.total),
+                  backgroundColor: 'rgba(203, 167, 25, 0.5)', // var(--accent)
+                  borderColor: 'rgba(203, 167, 25, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: { beginAtZero: true, grid: { color: '#333' } },
+                  x: { grid: { display: false } }
+                },
+                plugins: {
+                  legend: { labels: { color: '#aaa' } }
+                }
+              }
+            });
+          }
+        }
+      }, [activeView, stats, loading]);
+
+      const renderView = () => {
+        if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}><i className="fas fa-spinner fa-spin fa-3x" style={{ color: 'var(--accent)' }}></i></div>;
         switch (activeView) {
           case "dashboard":
             return (
               <div>
-                <h2>Tableau de Bord</h2>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "20px",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div
-                    className="card"
-                    style={{ borderLeft: "4px solid var(--accent)" }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "1.8rem",
-                        fontWeight: "700",
-                        color: "var(--text-main)",
-                      }}
-                    >
-                      {orders.length}
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '20px' }}>Tableau de Bord</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                  {[
+                    { label: 'Commandes', val: orders.length, color: 'var(--accent)', icon: 'fa-shopping-basket' },
+                    { label: 'Revenu Total', val: (orders.reduce((a, o) => a + (parseFloat(o.total_price || o.total) || 0), 0)).toFixed(2) + ' DT', color: 'var(--success)', icon: 'fa-wallet' },
+                    { label: 'Produits Actifs', val: products.filter(p => p.is_active).length, color: 'var(--info)', icon: 'fa-box' }
+                  ].map((stat, i) => (
+                    <div key={i} className="card" style={{ borderLeft: `4px solid ${stat.color}`, display: 'flex', alignItems: 'center', gap: '20px' }}>
+                      <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: `${stat.color}20`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                        <i className={`fas ${stat.icon}`}></i>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: '700' }}>{stat.val}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{stat.label}</div>
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        color: "var(--text-muted)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      Commandes Totales
+                  ))}
+                </div>
+
+                {/* --- STATS AVANCÉES --- */}
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
+
+                  {/* CHART */}
+                  <div className="card">
+                    <h3 style={{ marginBottom: '20px' }}>Revenus (7 derniers jours)</h3>
+                    <div style={{ position: 'relative', height: '300px' }}>
+                      <canvas id="salesChart"></canvas>
                     </div>
                   </div>
-                  <div
-                    className="card"
-                    style={{ borderLeft: "4px solid var(--success)" }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "1.8rem",
-                        fontWeight: "700",
-                        color: "var(--text-main)",
-                      }}
-                    >
-                      {orders.reduce((acc, o) => acc + (parseFloat(o.total) || 0), 0)} DT
-                    </div>
-                    <div
-                      style={{
-                        color: "var(--text-muted)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      Revenu Total
-                    </div>
-                  </div>
-                  <div
-                    className="card"
-                    style={{ borderLeft: "4px solid #9CA3AF" }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "1.8rem",
-                        fontWeight: "700",
-                        color: "var(--text-main)",
-                      }}
-                    >
-                      {products.filter(p => p.is_active || p.isActive).length}
-                    </div>
-                    <div
-                      style={{
-                        color: "var(--text-muted)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      Produits Actifs
-                    </div>
+
+                  {/* TOP PRODUCTS */}
+                  <div className="card">
+                    <h3 style={{ marginBottom: '20px' }}>Top 5 Produits</h3>
+                    {stats && stats.top_products ? (
+                      <div>
+                        {stats.top_products.map((p, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #333' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 'bold', color: 'var(--accent)', width: '24px' }}>#{i + 1}</span>
+                              <span>{p.name}</span>
+                            </div>
+                            <span className="badge neutral">{p.sold} ventes</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div>Chargement...</div>}
                   </div>
                 </div>
+
                 <h3>Dernières Commandes</h3>
-                <div
-                  className="card mt-10"
-                  style={{ padding: "0", overflow: "hidden" }}
-                >
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Client</th>
-                        <th>Montant</th>
-                        <th>Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.slice(0, 5).map((o) => (
-                        <tr key={o.id}>
-                          <td>{o.customer_name}</td>
-                          <td>{o.total} DT</td>
-                          <td>
-                            <span className="badge badge-default">
-                              {o.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="card" style={{ padding: 0 }}>
+                  <table><thead><tr><th>Client</th><th>Montant</th><th>Statut</th></tr></thead>
+                    <tbody>{orders.slice(0, 5).map(o => (<tr key={o.id}><td>{o.customer_name}</td><td>{(o.total_price || o.total || 0).toFixed(2)} DT</td><td>{getStatusBadge(o.status)}</td></tr>))}</tbody></table>
                 </div>
               </div>
             );
-          case "products":
-            return (
-              <ProductManager products={products} setProducts={setProducts} />
-            );
-          case "orders":
-            return (
-              <OrderManager
-                orders={orders}
-                setOrders={setOrders}
-                cities={cities}
-              />
-            );
-          case "admins":
-            return <AdminManager admins={admins} setAdmins={setAdmins} />;
-          default:
-            return <div>Page en construction</div>;
+          case "products": return <ProductManager products={products} setProducts={setProducts} />;
+          case "orders": return <OrderManager orders={orders} setOrders={setOrders} cities={cities} />;
+          case "admins": return <AdminManager admins={admins} setAdmins={setAdmins} />;
+          case "settings": return <SettingsManager />;
+          default: return <div>Page en construction</div>;
         }
       };
+
+      const getStatusBadge = (status) => {
+        let icon = "fa-clock"; let cls = "warning";
+        if (status === "Livré") { icon = "fa-check"; cls = "success"; } if (status === "En préparation") { icon = "fa-fire"; cls = "primary"; } if (status === "Annulé") { icon = "fa-ban"; cls = "danger"; }
+        return <span className={`badge ${cls}`}><i className={`fas ${icon}`}></i> {status}</span>;
+      }
 
       return (
         <div className="app-container">
           <Sidebar activeView={activeView} setView={setActiveView} />
           <div className="main-content">
             <header className="header">
-              <div style={{ fontWeight: 600 }}>OHMEALS Admin</div>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--accent)",
-                }}
-              >
-                A
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>OHMEALS <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>Admin</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Admin User</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>En ligne</div>
+                </div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #a38512)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>A</div>
               </div>
             </header>
             <div className="content-scroll">{renderView()}</div>
+            <ToastContainer />
           </div>
         </div>
       );

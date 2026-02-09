@@ -10,9 +10,59 @@ from app.extensions import db
 from app.models.admin import Admin
 from app.models.product import Product, ProductVariant
 from app.models.order import Order, OrderItem
+from app.models.site_setting import SiteSetting  
 
 # Blueprint API
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+
+# ============================================
+# SITE SETTINGS (GLOBAL CONFIG)
+# ============================================
+
+ALLOWED_SETTINGS_KEYS = {
+    "index_description",
+    "about_description",
+    "footer_description",
+    "phone",
+    "email",
+    "address",
+    "facebook_url",
+    "twitter_url",
+    "instagram_url",
+    "linkedin_url",
+}
+
+
+@api_bp.route('/settings', methods=['GET'])
+@login_required
+def get_settings():
+    """Get all site settings."""
+    settings = SiteSetting.query.all()
+    return jsonify({s.key: s.value for s in settings}), 200
+
+
+@api_bp.route('/settings', methods=['POST', 'PUT'])
+@login_required
+def update_settings():
+    """Update site settings in bulk."""
+    data = request.get_json()
+
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Format invalide'}), 400
+
+    for key, value in data.items():
+        if key not in ALLOWED_SETTINGS_KEYS:
+            continue  # ignore clés non autorisées
+
+        setting = SiteSetting.query.filter_by(key=key).first()
+        if setting:
+            setting.value = value
+        else:
+            db.session.add(SiteSetting(key=key, value=value))
+
+    db.session.commit()
+    return jsonify({'message': 'Settings mis à jour avec succès'}), 200
 
 
 # ============================================
@@ -224,6 +274,15 @@ def delete_product(id):
 
 
 # ============================================
+# CITY CRUD
+# ============================================
+
+# City module disabled by user request
+# @api_bp.route('/cities', methods=['GET']) ...
+
+
+
+# ============================================
 # ORDER CRUD
 # ============================================
 
@@ -344,17 +403,59 @@ def delete_order(id):
 # STATS (for dashboard)
 # ============================================
 
+# ============================================
+# STATS & EXPORT (for dashboard)
+# ============================================
+
+from datetime import datetime, timedelta
+from sqlalchemy import func, desc
+import csv
+import io
+from flask import make_response
+
 @api_bp.route('/stats', methods=['GET'])
 @login_required
 def get_stats():
-    """Get dashboard statistics."""
+    """Get dashboard statistics including charts and top products."""
+    
+    # 1. Basic Counters
     total_orders = Order.query.count()
     pending_orders = Order.query.filter_by(status='En attente').count()
     total_products = Product.query.count()
     active_products = Product.query.filter_by(is_active=True).count()
     total_admins = Admin.query.count()
+    
     orders = Order.query.all()
     total_revenue = sum(o.total_price for o in orders)
+
+    # 2. Revenue Chart Data (Last 7 Days)
+    today = datetime.now().date()
+    seven_days_ago = today - timedelta(days=6)
+    
+    # Initialize dictionary for last 7 days with 0
+    revenue_data = {}
+    for i in range(7):
+        day = (seven_days_ago + timedelta(days=i)).strftime('%Y-%m-%d')
+        revenue_data[day] = 0.0
+
+    # Query orders from last 7 days
+    recent_orders = Order.query.filter(Order.created_at >= seven_days_ago).all()
+    for o in recent_orders:
+        if o.created_at:
+            day_str = o.created_at.strftime('%Y-%m-%d')
+            if day_str in revenue_data:
+                revenue_data[day_str] += o.total_price
+
+    # Format for frontend [ {date, total}, ... ]
+    chart_data = [{"date": k, "total": v} for k, v in revenue_data.items()]
+
+    # 3. Top 5 Best Selling Products
+    # Query OrderItem, join Product, group by product, sum quantity, order by sum desc
+    top_products_query = db.session.query(
+        Product.name, func.sum(OrderItem.quantity).label('total_qty')
+    ).join(Product).group_by(Product.name).order_by(desc('total_qty')).limit(5).all()
+
+    top_products = [{"name": r[0], "sold": r[1]} for r in top_products_query]
 
     return jsonify({
         'total_orders': total_orders,
@@ -362,5 +463,43 @@ def get_stats():
         'total_products': total_products,
         'active_products': active_products,
         'total_admins': total_admins,
-        'total_revenue': total_revenue
+        'total_revenue': total_revenue,
+        'chart_data': chart_data,
+        'top_products': top_products
     })
+
+
+@api_bp.route('/export/orders', methods=['GET'])
+@login_required
+def export_orders():
+    """Export all orders to CSV."""
+    orders = Order.query.order_by(Order.created_at.desc()).all()
+    
+    # Create CSV in memory
+    si = io.StringIO()
+    cw = csv.writer(si)
+    
+    # Header
+    cw.writerow(['ID', 'Date', 'Client', 'Telephone', 'Email', 'Adresse', 'Total (DT)', 'Statut', 'Produits'])
+    
+    # Rows
+    for o in orders:
+        date_str = o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else ''
+        items_str = ", ".join([f"{i.quantity}x {i.product.name if i.product else 'Unknown'}" for i in o.items])
+        
+        cw.writerow([
+            o.id,
+            date_str,
+            o.customer_name,
+            o.customer_phone,
+            o.customer_email or '',
+            o.delivery_address,
+            f"{o.total_price:.2f}",
+            o.status,
+            items_str
+        ])
+        
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=commandes_ohmeals.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
