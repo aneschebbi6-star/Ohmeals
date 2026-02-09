@@ -258,9 +258,6 @@ window.addToCartFromMenu = function (product) {
     badge.textContent = totalItems;
     badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
   }
-
-  // Notification
-  showCartNotification('Produit ajouté au panier !');
 };
 
 function showCartNotification(message) {

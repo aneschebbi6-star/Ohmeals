@@ -1124,6 +1124,105 @@
         return <span className={`badge ${cls}`}>{status}</span>;
       };
 
+      // Génération de facture HTML imprimable
+      const generateInvoice = (order) => {
+        const invoiceWindow = window.open('', '_blank');
+        const items = order.items || [];
+        const itemsHtml = items.map(item => `
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.product_name || 'Produit #' + item.product_id}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity} ${item.unit}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${(item.price || 0).toFixed(2)} DT</td>
+          </tr>
+        `).join('');
+
+        const invoiceHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Facture #${order.id} - OHMEALS</title>
+            <meta charset="UTF-8">
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+              .invoice { max-width: 800px; margin: auto; background: #fff; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .header { display: flex; justify-content: space-between; border-bottom: 3px solid #ffbe33; padding-bottom: 20px; margin-bottom: 30px; }
+              .logo { font-size: 28px; font-weight: bold; color: #ffbe33; }
+              .invoice-number { text-align: right; }
+              .invoice-number h2 { color: #333; font-size: 20px; }
+              .info-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
+              .info-block h3 { color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; }
+              .info-block p { color: #333; margin: 4px 0; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              thead { background: #ffbe33; color: #fff; }
+              th { padding: 12px 8px; text-align: left; }
+              th:last-child { text-align: right; }
+              .total-row { font-weight: bold; font-size: 18px; }
+              .total-row td { padding-top: 15px; border-top: 2px solid #333; }
+              .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+              @media print { body { padding: 0; background: #fff; } .invoice { box-shadow: none; } .no-print { display: none; } }
+              .print-btn { background: #ffbe33; color: #fff; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 5px; margin-bottom: 20px; }
+            </style>
+          </head>
+          <body>
+            <div style="text-align: center;" class="no-print">
+              <button class="print-btn" onclick="window.print()">🖨️ Imprimer la facture</button>
+            </div>
+            <div class="invoice">
+              <div class="header">
+                <div class="logo">🍽️ OHMEALS</div>
+                <div class="invoice-number">
+                  <h2>FACTURE</h2>
+                  <p>#${String(order.id).padStart(5, '0')}</p>
+                  <p style="color: #666; font-size: 12px;">${new Date(order.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
+                </div>
+              </div>
+              
+              <div class="info-section">
+                <div class="info-block">
+                  <h3>Client</h3>
+                  <p><strong>${order.customer_name}</strong></p>
+                  <p>📞 ${order.customer_phone}</p>
+                  ${order.customer_email ? '<p>✉️ ' + order.customer_email + '</p>' : ''}
+                </div>
+                <div class="info-block">
+                  <h3>Livraison</h3>
+                  <p>📍 ${order.delivery_address}</p>
+                </div>
+              </div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produit</th>
+                    <th style="text-align: center;">Quantité</th>
+                    <th style="text-align: right;">Prix</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td colspan="2">TOTAL</td>
+                    <td style="text-align: right;">${(order.total_price || order.total || 0).toFixed(2)} DT</td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <div class="footer">
+                <p>Merci pour votre commande chez OHMEALS !</p>
+                <p>Traiteur Marocain - Saveurs authentiques</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        invoiceWindow.document.write(invoiceHtml);
+        invoiceWindow.document.close();
+      };
+
       return (
         <div>
           <div className="flex-between mb-20">
@@ -1152,7 +1251,7 @@
                 <tr>
                   <th>Client</th>
                   <th>Téléphone</th>
-                  <th>Ville</th>
+                  <th>Produits</th>
                   <th>Montant</th>
                   <th>Statut</th>
                   <th>Actions</th>
@@ -1173,7 +1272,25 @@
                       </div>
                     </td>
                     <td>{o.customer_phone}</td>
-                    <td>{o.city_name || (o.city ? o.city.name : "Inconnu")}</td>
+                    <td>
+                      {o.items && o.items.length > 0 ? (
+                        <div style={{ fontSize: "0.85rem" }}>
+                          {o.items.map((item, idx) => (
+                            <div key={idx} style={{ marginBottom: "4px", padding: "2px 0", borderBottom: idx < o.items.length - 1 ? "1px dashed var(--border)" : "none" }}>
+                              <span style={{ fontWeight: "500" }}>{item.product_name || `Produit #${item.product_id}`}</span>
+                              <span style={{ color: "var(--text-muted)", marginLeft: "8px" }}>
+                                x{item.quantity} {item.unit}
+                              </span>
+                              <span style={{ color: "var(--accent)", marginLeft: "8px", fontWeight: "bold" }}>
+                                {(item.price || 0).toFixed(2)} DT
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Aucun produit</span>
+                      )}
+                    </td>
                     <td
                       style={{ color: "var(--accent)", fontWeight: "bold" }}
                     >
@@ -1185,13 +1302,23 @@
                         className="btn btn-edit"
                         style={{ padding: "4px 8px" }}
                         onClick={() => handleOpenModal(o)}
+                        title="Modifier"
                       >
                         <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        className="btn"
+                        style={{ padding: "4px 8px", marginLeft: "5px", background: "#17a2b8", color: "#fff" }}
+                        onClick={() => generateInvoice(o)}
+                        title="Facture"
+                      >
+                        <i className="fas fa-file-invoice"></i>
                       </button>
                       <button
                         className="btn btn-danger"
                         style={{ padding: "4px 8px", marginLeft: "5px" }}
                         onClick={() => handleDelete(o.id)}
+                        title="Supprimer"
                       >
                         <i className="fas fa-trash"></i>
                       </button>
