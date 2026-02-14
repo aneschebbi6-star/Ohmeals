@@ -16,6 +16,7 @@ class Admin(UserMixin, db.Model):
     password = db.Column(db.String(200), nullable=False)
     reset_code = db.Column(db.String(5), nullable=True)
     last_code_time = db.Column(db.Integer, nullable=True)
+    must_change_password = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<Admin {self.username}>'

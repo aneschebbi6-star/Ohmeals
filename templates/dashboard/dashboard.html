@@ -442,6 +442,11 @@
   <div id="root"></div>
 
   <script type="text/babel">
+    const currentUser = {
+      id: {{ current_user.id }},
+    username: "{{ current_user.username }}",
+      email: "{{ current_user.email }}"
+    };
     {% raw %}
     const { useState, useEffect, useMemo } = React;
 
@@ -507,7 +512,7 @@
         { id: "dashboard", label: "Tableau de Bord", icon: "fa-chart-pie" },
         { id: "products", label: "Produits", icon: "fa-box-open" },
         { id: "orders", label: "Commandes", icon: "fa-shopping-basket" },
-
+        { id: "accounting", label: "Comptabilité", icon: "fa-calculator" },
         { id: "admins", label: "Administrateurs", icon: "fa-users-cog" },
         { id: "settings", label: "Paramètres", icon: "fa-cogs" },
       ];
@@ -1295,10 +1300,11 @@
     };
 
     // --- 4. GESTION ADMINS ---
-    const AdminManager = ({ admins, setAdmins }) => {
+    const AdminManager = ({ admins, setAdmins, currentUser, setCurrentUser }) => {
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [editingAdmin, setEditingAdmin] = useState(null);
       const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+      const [showPassword, setShowPassword] = useState(false);
 
       const refreshAdmins = async () => {
         const data = await apiRequest("/admins");
@@ -1308,18 +1314,42 @@
       const handleOpenModal = (admin = null) => {
         if (admin) { setEditingAdmin(admin); setFormData({ username: admin.username, email: admin.email, password: "" }); }
         else { setEditingAdmin(null); setFormData({ username: "", email: "", password: "" }); }
+        setShowPassword(false);
         setIsModalOpen(true);
       };
 
       const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation basique côté client pour le mot de passe
+        if ((!editingAdmin || formData.password) && formData.password.length > 0) {
+          if (formData.password.length < 8) return addToast("Le mot de passe doit faire au moins 8 caractères", "error");
+          if (!/[A-Z]/.test(formData.password)) return addToast("Le mot de passe doit contenir une majuscule", "error");
+          if (!/[a-z]/.test(formData.password)) return addToast("Le mot de passe doit contenir une minuscule", "error");
+          if (!/\d/.test(formData.password)) return addToast("Le mot de passe doit contenir un chiffre", "error");
+        }
+
         const payload = { username: formData.username, email: formData.email };
         if (!editingAdmin || formData.password.trim() !== "") payload.password = formData.password;
-        if (editingAdmin) await apiRequest(`/admins/${editingAdmin.id}`, "PUT", payload);
-        else await apiRequest("/admins", "POST", payload);
-        setIsModalOpen(false);
-        refreshAdmins();
-        addToast("Admin mis à jour", "success");
+        if (editingAdmin) {
+          const res = await apiRequest(`/admins/${editingAdmin.id}`, "PUT", payload);
+          if (res) {
+            setIsModalOpen(false);
+            refreshAdmins();
+            addToast("Admin mis à jour", "success");
+            // Mettre à jour l'utilisateur courant s'il s'agit de lui-même
+            if (currentUser && currentUser.id === editingAdmin.id) {
+              setCurrentUser({ ...currentUser, username: payload.username, email: payload.email });
+            }
+          }
+        } else {
+          const res = await apiRequest("/admins", "POST", payload);
+          if (res) {
+            setIsModalOpen(false);
+            refreshAdmins();
+            addToast("Admin créé avec succès", "success");
+          }
+        }
       };
 
       const handleDelete = async (id) => {
@@ -1337,7 +1367,22 @@
               <tbody>{admins.map(a => <tr key={a.id}><td>{a.username}</td><td>{a.email}</td><td><button className="btn btn-icon" style={{ background: '#374151', color: 'white', marginRight: '5px' }} onClick={() => handleOpenModal(a)}><i className="fas fa-edit"></i></button><button className="btn btn-icon btn-danger" onClick={() => handleDelete(a.id)}><i className="fas fa-trash"></i></button></td></tr>)}</tbody>
             </table>
           </div>
-          {isModalOpen && (<Modal onClose={() => setIsModalOpen(false)} title={editingAdmin ? "Modifier Admin" : "Ajouter Admin"}><form onSubmit={handleSubmit}><div className="mb-20"><label>Username</label><input type="text" className="input-control" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} /></div><div className="mb-20"><label>Email</label><input type="email" className="input-control" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} /></div><div className="mb-20"><label>Mot de passe {editingAdmin && "(vide pour inchangé)"}</label><input type="password" className="input-control" required={!editingAdmin} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} /></div><button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingAdmin ? "Modifier" : "Créer"}</button></form></Modal>)}
+          {isModalOpen && (
+            <Modal onClose={() => setIsModalOpen(false)} title={editingAdmin ? "Modifier Admin" : "Ajouter Admin"}>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-20"><label>Username</label><input type="text" className="input-control" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} /></div>
+                <div className="mb-20"><label>Email</label><input type="email" className="input-control" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} /></div>
+                <div className="mb-20" style={{ position: 'relative' }}>
+                  <label>Mot de passe {editingAdmin && "(vide pour inchangé)"}</label>
+                  <input type={showPassword ? "text" : "password"} className="input-control" required={!editingAdmin} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+                  <span onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '15px', top: '40px', cursor: 'pointer', color: '#888' }}>
+                    <i className={showPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </span>
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingAdmin ? "Modifier" : "Créer"}</button>
+              </form>
+            </Modal>
+          )}
         </div>
       );
     };
@@ -1407,6 +1452,248 @@
       );
     };
 
+    // --- ACCOUNTING DASHBOARD ---
+    const CATEGORY_LABELS = {
+      'ingredients': 'Ingrédients', 'salaires': 'Salaires', 'loyer': 'Loyer',
+      'equipement': 'Équipement', 'marketing': 'Marketing', 'livraison': 'Livraison', 'autre': 'Autre'
+    };
+    const CATEGORY_COLORS = {
+      'ingredients': '#e74c3c', 'salaires': '#3498db', 'loyer': '#2ecc71',
+      'equipement': '#f39c12', 'marketing': '#9b59b6', 'livraison': '#1abc9c', 'autre': '#95a5a6'
+    };
+
+    const AccountingDashboard = () => {
+      const [period, setPeriod] = useState('month');
+      const [summary, setSummary] = useState(null);
+      const [revenueData, setRevenueData] = useState([]);
+      const [expensesChart, setExpensesChart] = useState([]);
+      const [expenses, setExpenses] = useState([]);
+      const [expenseMeta, setExpenseMeta] = useState({ total: 0, page: 1, pages: 1 });
+      const [categories, setCategories] = useState([]);
+      const [showModal, setShowModal] = useState(false);
+      const [editingExpense, setEditingExpense] = useState(null);
+      const [formData, setFormData] = useState({ title: '', category: 'ingredients', amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+      const [loadingAcc, setLoadingAcc] = useState(true);
+
+      const revenueChartRef = React.useRef(null);
+      const expenseChartRef = React.useRef(null);
+      const revenueChartInstance = React.useRef(null);
+      const expenseChartInstance = React.useRef(null);
+
+      const fetchData = async () => {
+        setLoadingAcc(true);
+        const [sumRes, revRes, expChartRes, expListRes, catRes] = await Promise.all([
+          apiRequest(`/accounting/summary?period=${period}`),
+          apiRequest(`/accounting/revenue-chart?granularity=${period === 'today' ? 'daily' : period === 'week' ? 'daily' : 'daily'}`),
+          apiRequest('/accounting/expenses-chart'),
+          apiRequest('/accounting/expenses'),
+          apiRequest('/accounting/categories')
+        ]);
+        if (sumRes) setSummary(sumRes);
+        if (revRes) setRevenueData(revRes);
+        if (expChartRes) setExpensesChart(expChartRes);
+        if (expListRes) { setExpenses(expListRes.expenses || []); setExpenseMeta({ total: expListRes.total, page: expListRes.page, pages: expListRes.pages }); }
+        if (catRes) setCategories(catRes);
+        setLoadingAcc(false);
+      };
+
+      useEffect(() => { fetchData(); }, [period]);
+
+      // Revenue Line Chart
+      useEffect(() => {
+        if (!revenueChartRef.current || revenueData.length === 0) return;
+        if (revenueChartInstance.current) revenueChartInstance.current.destroy();
+        revenueChartInstance.current = new Chart(revenueChartRef.current, {
+          type: 'line',
+          data: {
+            labels: revenueData.map(d => d.label),
+            datasets: [{ label: 'Revenus (DT)', data: revenueData.map(d => d.total), borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#2ecc71' }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#aaa' } }, x: { grid: { display: false }, ticks: { color: '#aaa' } } }, plugins: { legend: { labels: { color: '#ccc' } } } }
+        });
+        return () => { if (revenueChartInstance.current) revenueChartInstance.current.destroy(); };
+      }, [revenueData]);
+
+      // Expenses Pie Chart
+      useEffect(() => {
+        if (!expenseChartRef.current || expensesChart.length === 0) return;
+        if (expenseChartInstance.current) expenseChartInstance.current.destroy();
+        expenseChartInstance.current = new Chart(expenseChartRef.current, {
+          type: 'doughnut',
+          data: {
+            labels: expensesChart.map(d => CATEGORY_LABELS[d.category] || d.category),
+            datasets: [{ data: expensesChart.map(d => d.total), backgroundColor: expensesChart.map(d => CATEGORY_COLORS[d.category] || '#95a5a6'), borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#ccc', padding: 15, usePointStyle: true } } } }
+        });
+        return () => { if (expenseChartInstance.current) expenseChartInstance.current.destroy(); };
+      }, [expensesChart]);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.title || !formData.amount || !formData.category) { if (addToast) addToast('Remplir tous les champs obligatoires', 'error'); return; }
+        const payload = { ...formData, amount: parseFloat(formData.amount) };
+        let res;
+        if (editingExpense) {
+          res = await apiRequest(`/accounting/expenses/${editingExpense.id}`, 'PUT', payload);
+        } else {
+          res = await apiRequest('/accounting/expenses', 'POST', payload);
+        }
+        if (res) {
+          if (addToast) addToast(editingExpense ? 'Dépense modifiée' : 'Dépense ajoutée', 'success');
+          setShowModal(false); setEditingExpense(null);
+          setFormData({ title: '', category: 'ingredients', amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+          fetchData();
+        }
+      };
+
+      const handleDelete = async (id) => {
+        if (!confirm('Supprimer cette dépense ?')) return;
+        const res = await apiRequest(`/accounting/expenses/${id}`, 'DELETE');
+        if (res) { if (addToast) addToast('Dépense supprimée', 'success'); fetchData(); }
+      };
+
+      const openEdit = (exp) => {
+        setEditingExpense(exp);
+        setFormData({ title: exp.title, category: exp.category, amount: exp.amount.toString(), date: exp.date, notes: exp.notes || '' });
+        setShowModal(true);
+      };
+
+      const openAdd = () => {
+        setEditingExpense(null);
+        setFormData({ title: '', category: 'ingredients', amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+        setShowModal(true);
+      };
+
+      const exportCSV = () => {
+        const start = summary ? summary.start_date : '';
+        const end = summary ? summary.end_date : '';
+        window.open(`/api/accounting/export?start=${start}&end=${end}`, '_blank');
+      };
+
+      if (loadingAcc) return <div style={{ textAlign: 'center', padding: '50px' }}><i className="fas fa-spinner fa-spin fa-3x" style={{ color: 'var(--accent)' }}></i></div>;
+
+      return (
+        <div>
+          <div className="flex-between" style={{ marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}><i className="fas fa-calculator" style={{ color: 'var(--accent)', marginRight: '10px' }}></i>Comptabilité</h2>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['today', 'week', 'month'].map(p => (
+                <button key={p} onClick={() => setPeriod(p)} className={`btn ${period === p ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                  {p === 'today' ? "Aujourd'hui" : p === 'week' ? 'Semaine' : 'Mois'}
+                </button>
+              ))}
+              <button onClick={exportCSV} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                <i className="fas fa-download" style={{ marginRight: '6px' }}></i>CSV
+              </button>
+            </div>
+          </div>
+
+          {/* Financial Cards */}
+          {summary && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid #2ecc71' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px' }}><i className="fas fa-arrow-up" style={{ color: '#2ecc71', marginRight: '6px' }}></i>Revenus</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: '700', color: '#2ecc71' }}>{summary.revenue.toFixed(2)} DT</div>
+              </div>
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid #e74c3c' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px' }}><i className="fas fa-arrow-down" style={{ color: '#e74c3c', marginRight: '6px' }}></i>Dépenses</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: '700', color: '#e74c3c' }}>{summary.expenses.toFixed(2)} DT</div>
+              </div>
+              <div className="card" style={{ padding: '20px', borderLeft: `4px solid ${summary.profit >= 0 ? '#2ecc71' : '#e74c3c'}` }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px' }}><i className="fas fa-balance-scale" style={{ marginRight: '6px' }}></i>Bénéfice Net</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: '700', color: summary.profit >= 0 ? '#2ecc71' : '#e74c3c' }}>{summary.profit.toFixed(2)} DT</div>
+              </div>
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--accent)' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px' }}><i className="fas fa-percentage" style={{ color: 'var(--accent)', marginRight: '6px' }}></i>Marge</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--accent)' }}>{summary.margin}%</div>
+              </div>
+            </div>
+          )}
+
+          {/* Charts */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+            <div className="card" style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '16px' }}><i className="fas fa-chart-line" style={{ color: '#2ecc71', marginRight: '8px' }}></i>Revenus</h3>
+              <div style={{ height: '260px' }}><canvas ref={revenueChartRef}></canvas></div>
+              {revenueData.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>Aucune donnée</div>}
+            </div>
+            <div className="card" style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '16px' }}><i className="fas fa-chart-pie" style={{ color: '#e74c3c', marginRight: '8px' }}></i>Dépenses par catégorie</h3>
+              <div style={{ height: '260px' }}><canvas ref={expenseChartRef}></canvas></div>
+              {expensesChart.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>Aucune dépense</div>}
+            </div>
+          </div>
+
+          {/* Expenses Table */}
+          <div className="flex-between" style={{ marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600' }}><i className="fas fa-list" style={{ color: 'var(--accent)', marginRight: '8px' }}></i>Dépenses ({expenseMeta.total})</h3>
+            <button onClick={openAdd} className="btn btn-primary" style={{ padding: '8px 20px' }}>
+              <i className="fas fa-plus" style={{ marginRight: '6px' }}></i>Ajouter
+            </button>
+          </div>
+          <div className="card" style={{ padding: 0 }}>
+            <table>
+              <thead><tr><th>Date</th><th>Titre</th><th>Catégorie</th><th>Montant</th><th>Actions</th></tr></thead>
+              <tbody>
+                {expenses.length === 0 ? (
+                  <tr><td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Aucune dépense enregistrée</td></tr>
+                ) : expenses.map(exp => (
+                  <tr key={exp.id}>
+                    <td>{exp.date}</td>
+                    <td>{exp.title}</td>
+                    <td><span className="badge neutral">{CATEGORY_LABELS[exp.category] || exp.category}</span></td>
+                    <td style={{ fontWeight: '600', color: '#e74c3c' }}>{exp.amount.toFixed(2)} DT</td>
+                    <td>
+                      <button onClick={() => openEdit(exp)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', marginRight: '8px' }}><i className="fas fa-edit"></i></button>
+                      <button onClick={() => handleDelete(exp.id)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}><i className="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {expenseMeta.pages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
+              {Array.from({ length: expenseMeta.pages }, (_, i) => (
+                <button key={i} onClick={async () => { const res = await apiRequest(`/accounting/expenses?page=${i + 1}`); if (res) { setExpenses(res.expenses); setExpenseMeta({ total: res.total, page: res.page, pages: res.pages }); } }}
+                  className={`btn ${expenseMeta.page === i + 1 ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '6px 12px', fontSize: '0.8rem' }}>{i + 1}</button>
+              ))}
+            </div>
+          )}
+
+          {/* Expense Modal */}
+          {showModal && (
+            <Modal onClose={() => { setShowModal(false); setEditingExpense(null); }} title={editingExpense ? 'Modifier la dépense' : 'Nouvelle dépense'}>
+              <form onSubmit={handleSubmit}>
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  <div><label>Titre *</label><input className="input-control" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ex: Achat farine" required /></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div><label>Catégorie *</label>
+                      <select className="input-control" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                      </select>
+                    </div>
+                    <div><label>Montant (DT) *</label><input type="number" step="0.01" min="0.01" className="input-control" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} required /></div>
+                  </div>
+                  <div><label>Date</label><input type="date" className="input-control" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} /></div>
+                  <div><label>Notes</label><textarea className="input-control" rows="3" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Notes optionnelles..."></textarea></div>
+                  <button type="submit" className="btn btn-primary" style={{ padding: '12px' }}>
+                    <i className={`fas ${editingExpense ? 'fa-save' : 'fa-plus'}`} style={{ marginRight: '6px' }}></i>
+                    {editingExpense ? 'Sauvegarder' : 'Ajouter'}
+                  </button>
+                </div>
+              </form>
+            </Modal>
+          )}
+        </div>
+      );
+    };
+
     // --- APP PRINCIPALE ---
     const App = () => {
       const [activeView, setActiveView] = useState("dashboard");
@@ -1416,6 +1703,7 @@
       const [cities, setCities] = useState([]);
       const [admins, setAdmins] = useState([]);
       const [stats, setStats] = useState(null); // New stats state
+      const [user, setUser] = useState(currentUser); // Local state for current user
 
       useEffect(() => {
         const init = async () => {
@@ -1538,7 +1826,8 @@
             );
           case "products": return <ProductManager products={products} setProducts={setProducts} />;
           case "orders": return <OrderManager orders={orders} setOrders={setOrders} cities={cities} />;
-          case "admins": return <AdminManager admins={admins} setAdmins={setAdmins} />;
+          case "accounting": return <AccountingDashboard />;
+          case "admins": return <AdminManager admins={admins} setAdmins={setAdmins} currentUser={user} setCurrentUser={setUser} />;
           case "settings": return <SettingsManager />;
           default: return <div>Page en construction</div>;
         }
@@ -1558,10 +1847,10 @@
               <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>OHMEALS <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>Admin</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Admin User</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{user.username}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>En ligne</div>
                 </div>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #a38512)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>A</div>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #a38512)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>{user.username.charAt(0).toUpperCase()}</div>
               </div>
             </header>
             <div className="content-scroll">{renderView()}</div>

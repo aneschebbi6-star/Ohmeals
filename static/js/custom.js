@@ -10,15 +10,16 @@ getYear();
 
 // isotope js
 $(window).on('load', function () {
-    $('.filters_menu li').click(function () {
-        $('.filters_menu li').removeClass('active');
-        $(this).addClass('active');
+    // Isotope click handler removed to avoid conflict with menu.js
+    // $('.filters_menu li').click(function () {
+    //     $('.filters_menu li').removeClass('active');
+    //     $(this).addClass('active');
 
-        var data = $(this).attr('data-filter');
-        $grid.isotope({
-            filter: data
-        })
-    });
+    //     var data = $(this).attr('data-filter');
+    //     $grid.isotope({
+    //         filter: data
+    //     })
+    // });
 
     var $grid = $(".grid").isotope({
         itemSelector: ".all",
@@ -30,9 +31,9 @@ $(window).on('load', function () {
 });
 
 // nice select
-$(document).ready(function() {
+$(document).ready(function () {
     $('select').niceSelect();
-  });
+});
 
 /** google_map js **/
 function myMap() {

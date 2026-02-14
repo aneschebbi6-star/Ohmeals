@@ -238,24 +238,8 @@
       passwordError.textContent = ""; // Reset message
       const pwd = password.value;
 
-      // Vérifier lettre + chiffre
-      const hasLetter = /[a-zA-Z]/.test(pwd);
-      const hasNumber = /[0-9]/.test(pwd);
-
-      if (!hasLetter || !hasNumber) {
-        passwordError.textContent =
-          "Le mot de passe doit contenir au moins une lettre et un chiffre.";
-        event.preventDefault();
-        return;
-      }
-
-      // Minimum 6 caractères
-      if (pwd.length < 6) {
-        passwordError.textContent =
-          "Le mot de passe doit contenir au moins 6 caractères.";
-        event.preventDefault();
-        return;
-      }
+      // Validation supprimée pour éviter de bloquer les anciens mots de passe
+      // Le backend gère l'authentification
 
       // Effacer le mot de passe après submit
       setTimeout(() => {

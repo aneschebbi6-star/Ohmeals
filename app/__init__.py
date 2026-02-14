@@ -30,6 +30,7 @@ def create_app(config_name='default'):
     # ------------------------
     from app.models.admin import Admin
     from app.models.site_setting import SiteSetting
+    from app.models.expense import Expense
 
     # ------------------------
     # Flask-Login user loader
@@ -54,11 +55,13 @@ def create_app(config_name='default'):
     from app.controllers.auth_controller import auth_bp
     from app.controllers.menu_controller import menu_bp
     from app.controllers.api_controller import api_bp
+    from app.controllers.accounting_controller import accounting_bp
 
     app.register_blueprint(page_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(menu_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(accounting_bp)
 
     # ------------------------
     # Database init
@@ -66,12 +69,18 @@ def create_app(config_name='default'):
     with app.app_context():
         db.create_all()
 
-        # Create default admin if not exists
-        if not Admin.query.filter_by(username='anes').first():
+        # Create default admin if table is empty
+        if not Admin.query.first():
+            import os
+            admin_user = os.environ.get('ADMIN_USER', 'admin')
+            admin_email = os.environ.get('ADMIN_EMAIL', 'admin@ohmeals.com')
+            admin_pass = os.environ.get('ADMIN_PASSWORD', 'OhMeals2024!')
+            
             admin = Admin(
-                username='anes',
-                email='aneschebbi6@gmail.com',
-                password=generate_password_hash('anes123')
+                username=admin_user,
+                email=admin_email,
+                password=generate_password_hash(admin_pass),
+                must_change_password=True  # Force password change
             )
             db.session.add(admin)
             db.session.commit()

@@ -11,6 +11,7 @@ from app.models.admin import Admin
 from app.models.product import Product, ProductVariant
 from app.models.order import Order, OrderItem
 from app.models.site_setting import SiteSetting  
+from app.utils import is_valid_email, is_valid_password
 
 # Blueprint API
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -89,6 +90,13 @@ def add_admin():
     if not data.get('username') or not data.get('email') or not data.get('password'):
         return jsonify({'error': 'Tous les champs sont requis'}), 400
 
+    if not is_valid_email(data['email']):
+        return jsonify({'error': 'Format email invalide'}), 400
+
+    is_valid_pass, pass_error = is_valid_password(data['password'])
+    if not is_valid_pass:
+        return jsonify({'error': pass_error}), 400
+
     if Admin.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'Username déjà utilisé'}), 400
 
@@ -114,9 +122,15 @@ def update_admin(id):
     data = request.get_json()
 
     admin.username = data.get('username', admin.username)
-    admin.email = data.get('email', admin.email)
+    if data.get('email'):
+        if not is_valid_email(data['email']):
+            return jsonify({'error': 'Format email invalide'}), 400
+        admin.email = data['email']
 
     if data.get('password') and data['password'].strip():
+        is_valid_pass, pass_error = is_valid_password(data['password'])
+        if not is_valid_pass:
+            return jsonify({'error': pass_error}), 400
         admin.password = generate_password_hash(data['password'])
 
     db.session.commit()

@@ -34,10 +34,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!grid) return;
     grid.innerHTML = '';
 
+    // Helper pour normaliser les chaînes (minuscules + sans accents)
+    function normalize(str) {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
     // 1. Filtrage
     let filtered = productsDB.filter(p => {
       const matchCat = state.activeCategory === '*' || p.category === state.activeCategory;
-      const matchTaste = state.sortTaste === 'all' || p.taste === state.sortTaste;
+
+      const productTaste = normalize(p.taste || '');
+      const filterTaste = normalize(state.sortTaste);
+
+      const matchTaste = state.sortTaste === 'all' || productTaste === filterTaste;
       return matchCat && matchTaste;
     });
 
@@ -55,8 +64,20 @@ document.addEventListener('DOMContentLoaded', function () {
       const defaultVariant = product.get_default_variant();
       if (!defaultVariant) return;
 
-      const tasteLabel = product.taste ? (product.taste.charAt(0).toUpperCase() + product.taste.slice(1)) : '';
-      const tasteClass = product.taste === 'sucré' ? 'taste-sucre' : 'taste-sale';
+      const productTasteRaw = product.taste || '';
+      const productTasteNorm = normalize(productTasteRaw);
+
+      let tasteLabel = '';
+      let tasteClass = '';
+
+      if (productTasteNorm === 'sucre') {
+        tasteLabel = 'Sucré';
+        tasteClass = 'taste-sucre';
+      } else if (productTasteNorm === 'sale') {
+        tasteLabel = 'Salé';
+        tasteClass = 'taste-sale';
+      }
+
       const tasteBadge = tasteLabel ? `<span class="taste-badge ${tasteClass}">${tasteLabel}</span>` : '';
 
       const col = document.createElement('div');
