@@ -142,6 +142,66 @@ def get_expenses_list(start_date=None, end_date=None, page=1, per_page=20):
     }
 
 
+def get_transactions_list(start_date, end_date, page=1, per_page=20):
+    """
+    Get a merged list of revenues (delivered orders) and expenses.
+    Sorted by date descending.
+    """
+    # 1. Fetch Orders in range
+    orders_query = Order.query.filter(
+        Order.status == PAID_STATUS,
+        cast(Order.created_at, Date) >= start_date,
+        cast(Order.created_at, Date) <= end_date
+    )
+
+    # 2. Fetch Expenses in range
+    expenses_query = Expense.query.filter(
+        Expense.date >= start_date,
+        Expense.date <= end_date
+    )
+
+    # Prepare merged list
+    transactions = []
+
+    for o in orders_query.all():
+        transactions.append({
+            'id': f'order_{o.id}',
+            'date': o.created_at.strftime('%Y-%m-%d') if o.created_at else '',
+            'title': f"Commande #{o.id} - {o.customer_name}",
+            'category': 'revenue',
+            'amount': float(o.total_price),
+            'type': 'income'
+        })
+
+    for e in expenses_query.all():
+        transactions.append({
+            'id': f'expense_{e.id}',
+            'date': e.date.isoformat(),
+            'title': e.title,
+            'category': e.category,
+            'amount': float(e.amount),
+            'type': 'expense'
+        })
+
+    # Sort by date descending
+    transactions.sort(key=lambda x: x['date'], reverse=True)
+
+    # Manual Pagination
+    total = len(transactions)
+    pages = (total + per_page - 1) // per_page
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    paginated_transactions = transactions[start_idx:end_idx]
+
+    return {
+        'transactions': paginated_transactions,
+        'total': total,
+        'page': page,
+        'per_page': per_page,
+        'pages': pages
+    }
+
+
 def get_export_data(start_date, end_date):
     """Get all financial data for CSV export."""
     # Revenue entries (delivered orders)

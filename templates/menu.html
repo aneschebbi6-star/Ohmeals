@@ -32,6 +32,8 @@
 
   <!-- Custom styles for this template -->
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+  <!-- Modern Product Display Styles -->
+  <link href="{{ url_for('static', filename='css/products.css') }}" rel="stylesheet" />
   <!-- responsive style -->
   <link href="{{ url_for('static', filename='css/responsive.css') }}" rel="stylesheet" />
 </head>
@@ -95,13 +97,13 @@
   </div>
 
   <!-- food section -->
-  <section class="food_section layout_padding-bottom">
+  <section class="food_section layout_padding mt-5">
     <div class="container">
       <div class="heading_container heading_center">
         <h2>Notre Menu</h2>
       </div>
 
-      <!-- Filtres de Catégorie -->
+      <!-- Category Filters (Modern) -->
       <ul class="filters_menu" id="categoryFilters">
         <li class="active" data-filter="*">Tous</li>
         <li data-filter="snack">Snacks</li>
@@ -109,7 +111,7 @@
         <li data-filter="salade">Salades</li>
       </ul>
 
-      <!-- Contrôles de Tri -->
+      <!-- Sorting Controls (Modern) -->
       <div class="sorting-controls">
         <select id="sortPrice" class="sort-select">
           <option value="default">Tri: Prix par défaut</option>
@@ -124,94 +126,90 @@
       </div>
 
       <div class="filters-content">
-        <!-- Les produits injectés ici via JS -->
-        <script>
-          window.productsDB = {{ products | tojson }};
-        </script>
-        <div class="row grid" id="productsGrid"></div>
-      </div>
+        <!-- Data for JS -->
+        <div id="products-data" data-products='{{ (products or []) | tojson | safe }}' style="display: none;"></div>
 
-      <div class="btn-box text-center mt-4">
-        <a href="#" class="btn btn-outline-dark rounded-pill px-4">Voir plus</a>
+        <script>
+          // Safe way to get data from Jinja to JS without lint errors
+          const productsDataEl = document.getElementById('products-data');
+          window.productsDB = productsDataEl ? JSON.parse(productsDataEl.getAttribute('data-products')) : [];
+        </script>
+        <!-- Modern Grid -->
+        <div id="productsGrid"></div>
       </div>
     </div>
   </section>
 
-  <!-- Modal Produit -->
-  <!-- Modal Produit -->
-  <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="fw-bold" id="modalProductName">Nom du produit</h5>
-          <button type="button" class="btn-close" onclick="closeModal()">
-            <span>&times;</span>
-          </button>
+  <!-- Modern Animated Modal (Popup) -->
+  <div class="pm-overlay" id="productModalOverlay">
+    <div class="pm-box">
+      <!-- Media Section -->
+      <div class="pm-gallery" id="pmGallery">
+        <!-- Injected by JS -->
+      </div>
+      <!-- Thumbnails -->
+      <div class="pm-thumbnails" id="pmThumbnails">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Content Section -->
+      <div class="pm-content">
+        <div class="pm-header">
+          <h2 class="pm-title" id="pmTitle">Product Name</h2>
+          <button class="pm-close" onclick="closeModal()">✕</button>
         </div>
-        <div class="modal-body">
-          <p id="modalProductDesc" class="text-muted small">
-            Description courte ici...
-          </p>
 
-          <hr />
+        <div class="pm-badges-row" id="pmBadgesRow">
+          <!-- Injected by JS -->
+        </div>
 
-          <h6 class="mb-3">Choisir la variante :</h6>
-          <div id="modalVariantsList">
-            <!-- Variantes injectées par JS -->
+        <p class="pm-desc" id="pmDesc">Description...</p>
+
+        <!-- Dynamic Video Section (Hidden if none) -->
+        <div class="pm-video-section" id="pmVideoSection" style="display: none;">
+          <h6><i class="fa fa-play-circle"></i> Aperçu Vidéo</h6>
+          <div id="pmVideoContainer"></div>
+        </div>
+
+        <hr class="pm-divider">
+
+        <h6 class="pm-variants-label">Choisissez une option :</h6>
+        <div class="pm-variants-grid" id="pmVariantsGrid">
+          <!-- Injected by JS -->
+        </div>
+
+        <div class="pm-qty-row">
+          <div class="pm-qty-controls">
+            <button class="pm-qty-btn" onclick="updateModalQty(-1)">-</button>
+            <span class="pm-qty-value" id="pmQtyValue">1</span>
+            <button class="pm-qty-btn" onclick="updateModalQty(1)">+</button>
           </div>
-
-          <hr />
-
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="quantity-control">
-              <button class="btn-qty" onclick="updateModalQty(-1)">-</button>
-              <span id="modalQty" class="fw-bold mx-2">1</span>
-              <button class="btn-qty" onclick="updateModalQty(1)">+</button>
-            </div>
-            <div class="text-end">
-              <small>Total</small>
-              <div id="modalTotalPrice" class="total-price-display">
-                0.00 DT
-              </div>
-            </div>
+          <div class="text-end">
+            <span class="pm-total-label">Prix Total</span>
+            <div class="pm-total-price" id="pmTotalPrice">0.00 DT</div>
           </div>
         </div>
-        <div class="modal-footer border-0 justify-content-center" style="margin-top: 20px">
-          <button type="button" class="btn btn-primary w-50 py-2 rounded-pill" onclick="addToCart()"
-            style="background-color: var(--primary-color); color: #000">
-            Ajouter au panier
-          </button>
-        </div>
+
+        <button class="pm-add-btn" onclick="handleModalAddToCart()">
+          <i class="fa fa-shopping-basket"></i> Ajouter au panier
+        </button>
       </div>
     </div>
   </div>
+
+  <!-- Toast Notification -->
+  <div class="pm-toast" id="pmToast">Produit ajouté !</div>
   <!-- end food section -->
+
   <!-- footer section -->
   {% include 'includes/footer.html' %}
-  <!-- footer section -->
+  <!-- end footer section -->
 
-  <!-- jQery -->
-  <script src="js/jquery-3.4.1.min.js"></script>
-  <!-- popper js -->
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-    crossorigin="anonymous"></script>
-  <!-- bootstrap js -->
-  <script src="js/bootstrap.js"></script>
-  <!-- owl slider -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-  <!-- isotope js -->
-  <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
-  <!-- nice select -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
-  <!-- custom js -->
-  <script src="js/custom.js"></script>
-  <!-- Google Map -->
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap"></script>
-  <!-- End Google Map -->
-  <!-- À mettre avant la fermeture de la balise </body> -->
+  <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
   <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
 </body>
 
 </html>

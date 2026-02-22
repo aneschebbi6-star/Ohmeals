@@ -90,6 +90,8 @@ a:focus {
   box-shadow: none;
 }
 
+
+
 /*header section*/
 .hero_area {
   position: relative;
@@ -291,6 +293,8 @@ a:focus {
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
 }
+
+
 
 .custom_nav-container .navbar-toggler span::after {
   top: 10px;
@@ -502,7 +506,7 @@ a:focus {
 }
 
 .food_section .filters_menu li.active {
-  background-color: #222831;
+  background-color: #30363f;
   color: #ffffff;
 }
 
@@ -619,8 +623,8 @@ a:focus {
 }
 
 .about_section {
-  background: #222831;
-  color: #ffffff;
+  background: #ffffff;
+  color: #0c0c0c;
 }
 
 .about_section .row {
@@ -1142,4 +1146,95 @@ a:focus {
 
 .modal.active .modal-dialog {
   transform: translate(0, 0);
+}
+
+/* Floating Cart Bubble (Global) */
+.floating-cart {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: #ffbe33;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.floating-cart:hover {
+  transform: scale(1.1);
+  background: #e69c00;
+}
+
+.floating-cart #cart-count {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #fff;
+  color: #ffbe33;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 800;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Cart Icon White Color */
+.user_option .cart_link i,
+.floating-cart i {
+  color: #ffffff !important;
+}
+
+/* Add to Cart Feedback Animation (+1) */
+.cart-feedback-anim {
+  position: absolute;
+  color: #28a745;
+  font-weight: 800;
+  font-size: 1.2rem;
+  pointer-events: none;
+  z-index: 10000;
+  animation: floatUpFade 1s ease-out forwards;
+}
+
+@keyframes floatUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.2);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1);
+  }
+}
+
+.pulse {
+  animation: badgePulse 0.3s ease-out;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }

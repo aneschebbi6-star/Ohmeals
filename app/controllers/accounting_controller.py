@@ -16,6 +16,7 @@ from app.services.accounting_service import (
     get_revenue_chart_data,
     get_expenses_by_category,
     get_expenses_list,
+    get_transactions_list,
     get_export_data
 )
 
@@ -104,6 +105,29 @@ def list_expenses():
     end_date = datetime.strptime(end, '%Y-%m-%d').date() if end else None
 
     data = get_expenses_list(start_date, end_date, page, per_page)
+    return jsonify(data)
+
+
+@accounting_bp.route('/transactions', methods=['GET'])
+@login_required
+def list_transactions():
+    """List merged transactions (Orders + Expenses)."""
+    period = request.args.get('period', 'month')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+
+    today = date.today()
+    if period == 'today':
+        start_date = today
+        end_date = today
+    elif period == 'week':
+        start_date = today - timedelta(days=today.weekday())
+        end_date = today
+    else:  # month
+        start_date = today.replace(day=1)
+        end_date = today
+
+    data = get_transactions_list(start_date, end_date, page, per_page)
     return jsonify(data)
 
 

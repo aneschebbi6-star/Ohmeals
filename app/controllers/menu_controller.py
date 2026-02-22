@@ -5,38 +5,6 @@ from app.extensions import db
 
 menu_bp = Blueprint('menu', __name__)
 
-def prepare_product(p):
-    """
-    Prépare un produit avec ses variantes pour le template.
-    Fix: Assure que les variantes sont triées et que toutes les infos (goût, unit) sont présentes.
-    """
-    variants = []
-    
-    # On récupère les variantes triées par position
-    # La relation Product.variants a un order_by='ProductVariant.position'
-    for v in p.variants:
-        variants.append({
-            'id': v.id,
-            'name': v.variant_name,  # 'name' ou 'variant_name' selon compatibilité JS, ici on adapte pour correspondre au modèle
-            'variant_name': v.variant_name, # Standard
-            'unit': v.unit,
-            'price': float(v.price), # Conversion float pour compatibilité JS
-            'price_display': v.get_price_display(),
-            'is_default': v.is_default,
-            'position': v.position,
-            'is_available': v.is_available
-        })
-
-    return {
-        'id': p.id,
-        'name': p.name,
-        'description': p.description or '',
-        'category': p.category,  # snack / plat / salade
-        'taste': p.taste,       # sucré / salé
-        'image': p.image or 'default_food.jpg', # Fallback si null
-        'variants': sorted(variants, key=lambda x: x['position'])
-    }
-
 @menu_bp.route('/menu')
 def menu():
     """
@@ -50,11 +18,9 @@ def menu():
     products = Product.query.filter_by(is_active=True).all()
     
     # Préparer la liste complète pour le JavaScript
-    # Cela résout le bug où JS avait une liste vide ou des données incomplètes
-    prepared_products = [prepare_product(p) for p in products]
+    prepared_products = [p.to_dict() for p in products]
 
     # (Optionnel) Préparer les listes spécifiques si vous voulez faire du rendu serveur
-    # Mais pour le tri JS dynamique, on garde la liste 'products' comme source principale.
     snacks = [p for p in prepared_products if p['category'] == 'snack']
     plats = [p for p in prepared_products if p['category'] == 'plat']
     salades = [p for p in prepared_products if p['category'] == 'salade']

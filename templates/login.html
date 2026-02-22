@@ -266,6 +266,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
   <!-- custom js -->
   <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+
+  <!-- Floating Cart -->
+  <a href="{{ url_for('menu.book') }}" class="floating-cart">
+    <i class="fa fa-shopping-cart"></i>
+    <span id="cart-count" style="display: none;">0</span>
+  </a>
+
+  <!-- Cart Logic -->
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
 </body>
 
 </html>

@@ -1,310 +1,449 @@
-// On place les fonctions globales à l'extérieur ou on les attache à window
-// pour qu'elles soient accessibles via les attributs onclick du HTML.
+/**
+ * OHMEALS — Product Display Modern JS (2026)
+ * menu.js — Cards Rendering + Advanced Gallery + Dynamic Modal
+ */
 
-let state = {
+// --- Global State ---
+const state = {
+  products: window.productsDB || [],
+  filteredProducts: [],
+  categories: [],
   activeCategory: '*',
-  sortPrice: 'default',
-  sortTaste: 'all',
-  currentProduct: null,
-  selectedVariant: null,
-  modalQty: 1
+  sortBy: 'default',
+  tasteFilter: 'all',
+  modal: {
+    product: null,
+    currentImgIndex: 0,
+    selectedVariant: null,
+    qty: 1
+  }
 };
 
-document.addEventListener('DOMContentLoaded', function () {
-  const productsDB = window.productsDB || [];
-
-  // -----------------------------------------------------------
-  // 2. Configuration Utilitaires
-  // -----------------------------------------------------------
-  productsDB.forEach(p => {
-    p.get_default_variant = function () {
-      if (this.variants && this.variants.length > 0) {
-        const def = this.variants.find(v => v.is_default);
-        return def || this.variants[0];
-      }
-      return null;
-    };
-  });
-
-  // -----------------------------------------------------------
-  // 3. Fonctions de Rendu (Accessibles en interne)
-  // -----------------------------------------------------------
-  function renderProducts() {
-    const grid = document.getElementById('productsGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    // Helper pour normaliser les chaînes (minuscules + sans accents)
-    function normalize(str) {
-      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
-
-    // 1. Filtrage
-    let filtered = productsDB.filter(p => {
-      const matchCat = state.activeCategory === '*' || p.category === state.activeCategory;
-
-      const productTaste = normalize(p.taste || '');
-      const filterTaste = normalize(state.sortTaste);
-
-      const matchTaste = state.sortTaste === 'all' || productTaste === filterTaste;
-      return matchCat && matchTaste;
-    });
-
-    // 2. Tri Prix
-    if (state.sortPrice !== 'default') {
-      filtered.sort((a, b) => {
-        const priceA = a.get_default_variant()?.price || 0;
-        const priceB = b.get_default_variant()?.price || 0;
-        return state.sortPrice === 'asc' ? priceA - priceB : priceB - priceA;
-      });
-    }
-
-    // 3. Génération HTML
-    filtered.forEach(product => {
-      const defaultVariant = product.get_default_variant();
-      if (!defaultVariant) return;
-
-      const productTasteRaw = product.taste || '';
-      const productTasteNorm = normalize(productTasteRaw);
-
-      let tasteLabel = '';
-      let tasteClass = '';
-
-      if (productTasteNorm === 'sucre') {
-        tasteLabel = 'Sucré';
-        tasteClass = 'taste-sucre';
-      } else if (productTasteNorm === 'sale') {
-        tasteLabel = 'Salé';
-        tasteClass = 'taste-sale';
-      }
-
-      const tasteBadge = tasteLabel ? `<span class="taste-badge ${tasteClass}">${tasteLabel}</span>` : '';
-
-      const col = document.createElement('div');
-      col.className = `col-sm-6 col-lg-4 all ${product.category}`;
-      col.innerHTML = `
-                <div class="box h-100">
-                    <div class="img-box">
-                        <img src="${product.image}" alt="${product.name}" />
-                    </div>
-                    <div class="detail-box">
-                        <h5>${product.name}</h5>
-                        <p>${tasteBadge}</p>
-                        <p>${product.description || ''}</p>
-                        <div class="options d-flex justify-content-between align-items-center mt-3">
-                            <div>
-                                <h6 class="price-preview mb-0">${defaultVariant.price.toFixed(2)} DT</h6>
-                                <small class="text-muted" style="font-size:0.7rem">/ ${defaultVariant.unit}</small>
-                            </div>
-                            <a href="#" class="btn-order" onclick="openModal(${product.id}, event)">
-                                <i class="bi bi-cart-plus"></i> Commander
-                            </a>
-                        </div>
-                    </div>
-                </div>`;
-      grid.appendChild(col);
-    });
-  }
-
-  // -----------------------------------------------------------
-  // 4. Initialisation & Events
-  // -----------------------------------------------------------
-  document.querySelectorAll('#categoryFilters li').forEach(li => {
-    li.addEventListener('click', (e) => {
-      document.querySelectorAll('#categoryFilters li').forEach(el => el.classList.remove('active'));
-      e.currentTarget.classList.add('active'); // Utilisation de currentTarget
-      state.activeCategory = e.currentTarget.dataset.filter;
-      renderProducts();
-    });
-  });
-
-  document.getElementById('sortPrice')?.addEventListener('change', (e) => {
-    state.sortPrice = e.target.value;
-    renderProducts();
-  });
-
-  document.getElementById('sortTaste')?.addEventListener('change', (e) => {
-    state.sortTaste = e.target.value;
-    renderProducts();
-  });
-
-  // Attacher les fonctions nécessaires au window pour le HTML
-  window.openModal = openModal;
-  window.closeModal = closeModal;
-  window.updateModalQty = updateModalQty;
-  window.addToCart = addToCart;
-  window.selectVariant = selectVariant;
-
-  renderProducts();
+// --- Initialization ---
+document.addEventListener('DOMContentLoaded', () => {
+  initProducts();
+  initFilters();
+  initSorting();
+  handleOverlayClick();
 });
 
-// -----------------------------------------------------------
-// 5. Fonctions Logique Modal (Hors du DOMContentLoaded)
-// -----------------------------------------------------------
+function initProducts() {
+  const grid = document.getElementById('productsGrid');
+  if (grid) {
+    grid.innerHTML = `
+      <div class="pm-skeleton-grid w-100">
+        ${Array(6).fill().map(() => `
+          <div class="pm-skeleton-card">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-content">
+              <div class="skeleton-line short"></div>
+              <div class="skeleton-line mid"></div>
+              <div class="skeleton-line"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
 
-function openModal(productId, event) {
-  if (event) event.preventDefault();
-  const productsDB = window.productsDB || [];
-  const product = productsDB.find(p => p.id === productId);
-  if (!product) return;
-
-  state.currentProduct = product;
-  state.selectedVariant = product.get_default_variant();
-  state.modalQty = 1;
-
-  document.getElementById('modalProductName').innerText = product.name;
-  document.getElementById('modalProductDesc').innerText = product.description || '';
-
-  renderVariants(product.variants);
-  updateModalDisplay();
-
-  const modal = document.getElementById('productModal');
-  if (modal) modal.classList.add('active');
+  // Simulate loading delay for smooth transition (or remove for instant)
+  setTimeout(() => {
+    state.filteredProducts = [...state.products];
+    renderProducts();
+  }, 800);
 }
 
-function renderVariants(variants) {
-  const container = document.getElementById('modalVariantsList');
-  if (!container) return;
-  container.innerHTML = '';
-
-  variants.forEach(variant => {
-    const isAvailable = variant.is_available;
-    const isSelected = state.selectedVariant && state.selectedVariant.id === variant.id;
-
-    let className = 'variant-option';
-    if (!isAvailable) className += ' disabled';
-    if (isSelected && isAvailable) className += ' selected';
-
-    const div = document.createElement('div');
-    div.className = className;
-    if (isAvailable) {
-      div.onclick = () => selectVariant(variant);
-    }
-
-    const vName = variant.variant_name || variant.name;
-    div.innerHTML = `
-            <div>
-                <span class="fw-bold">${vName}</span>
-                <div class="small text-muted">${variant.price.toFixed(2)} DT / ${variant.unit}</div>
-            </div>
-            ${isSelected ? '<i class="bi bi-check-circle-fill text-success"></i>' : ''}
-            ${!isAvailable ? '<span class="text-danger small">Indisponible</span>' : ''}
-        `;
-    container.appendChild(div);
+function initFilters() {
+  const filterItems = document.querySelectorAll('.filters_menu li');
+  filterItems.forEach(item => {
+    item.addEventListener('click', () => {
+      filterItems.forEach(li => li.classList.remove('active'));
+      item.classList.add('active');
+      state.activeCategory = item.getAttribute('data-filter');
+      applyFilters();
+    });
   });
 }
 
-function selectVariant(variant) {
-  state.selectedVariant = variant;
-  renderVariants(state.currentProduct.variants);
-  updateModalDisplay();
-}
+function initSorting() {
+  const sortPrice = document.getElementById('sortPrice');
+  const sortTaste = document.getElementById('sortTaste');
 
-function updateModalQty(delta) {
-  const newQty = state.modalQty + delta;
-  if (newQty >= 1) {
-    state.modalQty = newQty;
-    updateModalDisplay();
+  if (sortPrice) {
+    sortPrice.addEventListener('change', (e) => {
+      state.sortBy = e.target.value;
+      applyFilters();
+    });
+  }
+
+  if (sortTaste) {
+    sortTaste.addEventListener('change', (e) => {
+      state.tasteFilter = e.target.value;
+      applyFilters();
+    });
   }
 }
 
-function updateModalDisplay() {
-  const qtyEl = document.getElementById('modalQty');
-  const totalEl = document.getElementById('modalTotalPrice');
-
-  if (qtyEl) qtyEl.innerText = state.modalQty;
-  if (state.selectedVariant && totalEl) {
-    const total = state.selectedVariant.price * state.modalQty;
-    totalEl.innerText = `${total.toFixed(2)} DT`;
+function handleOverlayClick() {
+  const overlay = document.getElementById('productModalOverlay');
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
   }
 }
 
-function addToCart() {
-  if (!state.selectedVariant || !state.currentProduct) return;
+// --- Filter & Sort Logic ---
+function applyFilters() {
+  let list = [...state.products];
 
-  // Utiliser la fonction addToCart de cart.js
-  const product = {
-    id: state.currentProduct.id,
-    name: state.currentProduct.name,
-    price: state.selectedVariant.price,
-    unit: state.selectedVariant.unit,
-    variantId: state.selectedVariant.id,
-    variantName: state.selectedVariant.variant_name || state.selectedVariant.name
+  // Category
+  if (state.activeCategory !== '*') {
+    list = list.filter(p => p.category === state.activeCategory);
+  }
+
+  // Taste
+  if (state.tasteFilter !== 'all') {
+    list = list.filter(p => p.taste === state.tasteFilter);
+  }
+
+  // Sort
+  if (state.sortBy === 'asc') {
+    list.sort((a, b) => getMinPrice(a) - getMinPrice(b));
+  } else if (state.sortBy === 'desc') {
+    list.sort((a, b) => getMinPrice(b) - getMinPrice(a));
+  }
+
+  state.filteredProducts = list;
+  renderProducts();
+}
+
+function getMinPrice(product) {
+  if (!product.variants || product.variants.length === 0) return 0;
+  const defaultVar = product.variants.find(v => v.is_default);
+  return defaultVar ? defaultVar.price : product.variants[0].price;
+}
+
+// --- Rendering ---
+function renderProducts() {
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+
+  if (state.filteredProducts.length === 0) {
+    grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">Acuun produit trouvé.</div>';
+    return;
+  }
+
+  grid.innerHTML = state.filteredProducts.map(p => {
+    const primaryImg = p.image || '/static/images/default-food.jpg';
+    const hasMedia = (p.images && p.images.length > 1) || p.video_url;
+
+    // Stock Check
+    const anyInStock = p.variants?.some(v => v.is_in_stock);
+    const soldOutClass = !anyInStock ? 'is-sold-out' : '';
+    const soldOutBadge = !anyInStock ? `<div class="badge-soldout">ÉPUISÉ</div>` : '';
+
+    const discountBadge = p.discount > 0 ? `<div class="badge-discount">-${p.discount}%</div>` : '';
+    const mediaBadge = hasMedia ? `
+            <div class="badge-media-count">
+                <i class="fa ${p.video_url ? 'fa-video-camera' : 'fa-camera'}"></i>
+                ${p.images ? p.images.length : 1}
+            </div>` : '';
+
+    const defVar = p.variants?.find(v => v.is_default) || p.variants?.[0];
+    const priceFinal = defVar ? (defVar.price * (1 - (p.discount || 0) / 100)).toFixed(2) : '0.00';
+    const priceOrig = p.discount > 0 && defVar ? `<span class="price-original">${defVar.price.toFixed(2)}</span>` : '';
+
+    return `
+            <div class="product-card ${soldOutClass}" onclick="openModal(${p.id})">
+                <div class="card-img-box">
+                    <img src="${primaryImg}" alt="${p.name}" loading="lazy">
+                    <div class="card-img-overlay"></div>
+                    ${discountBadge}
+                    ${soldOutBadge}
+                    ${mediaBadge}
+                    <button class="quick-order-btn">${anyInStock ? 'Commander' : 'Voir Détails'}</button>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h3 class="card-title">${p.name}</h3>
+                        <span class="taste-badge-modern ${p.taste === 'sucre' ? 'sucre' : 'sale'}">
+                            ${p.taste === 'sucre' ? '🍭 Sucré' : '🧂 Salé'}
+                        </span>
+                    </div>
+                    <p class="card-description">${p.description || "Découvrez notre savoureuse création préparée avec passion."}</p>
+                    <div class="card-price-row">
+                        <div class="price-box">
+                            ${priceOrig}
+                            <span class="price-final">${priceFinal} DT</span>
+                            <span class="price-unit">${defVar ? '/ ' + defVar.unit : ''}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+  }).join('');
+}
+
+// --- Modal Logic ---
+window.openModal = function (productId) {
+  const product = state.products.find(p => p.id === productId);
+  if (!product) return;
+
+  state.modal.product = product;
+  state.modal.currentImgIndex = 0;
+  state.modal.qty = 1;
+  state.modal.selectedVariant = product.variants?.find(v => v.is_default) || product.variants?.[0] || null;
+
+  renderModalContent();
+  const overlay = document.getElementById('productModalOverlay');
+  if (overlay) {
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeModal = function () {
+  const overlay = document.getElementById('productModalOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    state.modal.product = null;
+    // Stop video if playing
+    const vidContainer = document.getElementById('pmVideoContainer');
+    if (vidContainer) vidContainer.innerHTML = '';
+  }
+};
+
+function renderModalContent() {
+  const p = state.modal.product;
+
+  // Gallery
+  renderGallery();
+
+  // Info
+  document.getElementById('pmTitle').innerText = p.name;
+  document.getElementById('pmDesc').innerText = p.description || "";
+
+  // Taste Badge
+  const badgeRow = document.getElementById('pmBadgesRow');
+  badgeRow.innerHTML = `<span class="taste-badge-modern ${p.taste === 'sucre' ? 'sucre' : 'sale'}">
+        ${p.taste === 'sucre' ? '🍭 Sucré' : '🧂 Salé'}
+    </span>`;
+
+  // Video
+  renderVideo();
+
+  // Variants
+  renderVariants();
+
+  // Qty & Price
+  updateModalPrice();
+}
+
+function renderGallery() {
+  const p = state.modal.product;
+  const galleryContainer = document.getElementById('pmGallery');
+  const thumbContainer = document.getElementById('pmThumbnails');
+
+  const allImages = p.images && p.images.length > 0
+    ? p.images.sort((a, b) => a.position - b.position)
+    : [{ image_url: p.image || '/static/images/default-food.jpg' }];
+
+  // Main View
+  let html = `<img src="${allImages[state.modal.currentImgIndex].image_url}" class="pm-main-img" id="pmMainImg">`;
+
+  if (allImages.length > 1) {
+    html += `
+            <button class="pm-arrow left" onclick="changeImg(-1)">❮</button>
+            <button class="pm-arrow right" onclick="changeImg(1)">❯</button>
+            <div class="pm-img-counter">${state.modal.currentImgIndex + 1} / ${allImages.length}</div>
+        `;
+  }
+  galleryContainer.innerHTML = html;
+
+  // Thumbnails
+  if (allImages.length > 1) {
+    thumbContainer.style.display = 'flex';
+    thumbContainer.innerHTML = allImages.map((img, idx) => `
+            <img src="${img.image_url}" class="pm-thumb ${idx === state.modal.currentImgIndex ? 'active' : ''}" 
+                 onclick="goToImg(${idx})" loading="lazy">
+        `).join('');
+  } else {
+    thumbContainer.style.display = 'none';
+  }
+}
+
+window.changeImg = function (dir) {
+  const p = state.modal.product;
+  const count = p.images?.length || 1;
+  state.modal.currentImgIndex = (state.modal.currentImgIndex + dir + count) % count;
+  renderGallery();
+};
+
+window.goToImg = function (idx) {
+  state.modal.currentImgIndex = idx;
+  renderGallery();
+};
+
+function renderVideo() {
+  const p = state.modal.product;
+  const section = document.getElementById('pmVideoSection');
+  const container = document.getElementById('pmVideoContainer');
+
+  if (!p.video_url) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+
+  if (p.video_url.includes('youtube.com') || p.video_url.includes('youtu.be')) {
+    let videoId = '';
+    if (p.video_url.includes('v=')) {
+      videoId = p.video_url.split('v=')[1].split('&')[0];
+    } else {
+      videoId = p.video_url.split('/').pop();
+    }
+    container.innerHTML = `
+            <div class="pm-video-wrapper">
+                <iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        `;
+  } else {
+    container.innerHTML = `
+            <div class="pm-video-wrapper">
+                <video controls width="100%">
+                    <source src="${p.video_url}" type="video/mp4">
+                    Votre navigateur ne supporte pas la lecture de vidéos.
+                </video>
+            </div>
+        `;
+  }
+}
+
+function renderVariants() {
+  const p = state.modal.product;
+  const grid = document.getElementById('pmVariantsGrid');
+
+  if (!p.variants || p.variants.length === 0) {
+    grid.innerHTML = '<div class="text-muted">Aucune variante disponible.</div>';
+    return;
+  }
+
+  grid.innerHTML = p.variants.map(v => {
+    const isSelected = state.modal.selectedVariant?.id === v.id;
+    return `
+            <div class="pm-variant-item ${isSelected ? 'selected' : ''} ${!v.is_available ? 'disabled' : ''}" 
+                 onclick="${v.is_available ? `selectVariant(${v.id})` : ''}">
+                <div class="d-flex flex-column">
+                    <span class="pm-variant-name">${v.variant_name}</span>
+                    <span class="pm-variant-price">${v.price.toFixed(2)} DT / ${v.unit}</span>
+                </div>
+                ${isSelected ? '<i class="fa fa-check-circle pm-variant-check"></i>' : ''}
+                ${!v.is_available ? '<span class="pm-variant-unavail">Indisponible</span>' : ''}
+            </div>
+        `;
+  }).join('');
+}
+
+window.selectVariant = function (variantId) {
+  const v = state.modal.product.variants.find(varItem => varItem.id === variantId);
+  if (v) {
+    state.modal.selectedVariant = v;
+    renderVariants();
+    updateModalPrice();
+    // Finalize UI
+    requestAnimationFrame(() => {
+      updateModalBtnText(); // Update button text with qty
+    });
+  }
+};
+
+function updateModalBtnText() {
+  const btn = document.querySelector('.pm-add-btn');
+  if (btn) {
+    const qty = state.modal.qty;
+    btn.innerHTML = `<i class="fa fa-shopping-basket"></i> Ajouter ${qty} au panier`;
+  }
+}
+
+window.updateModalQty = function (delta) {
+  state.modal.qty = Math.max(1, state.modal.qty + delta);
+  document.getElementById('pmQtyValue').innerText = state.modal.qty;
+  updateModalPrice();
+  updateModalBtnText(); // Update button text when qty changes
+};
+
+function updateModalPrice() {
+  if (!state.modal.selectedVariant) return;
+  const p = state.modal.product;
+  const v = state.modal.selectedVariant;
+  const unitPrice = v.price * (1 - (p.discount || 0) / 100);
+  const total = (unitPrice * state.modal.qty).toFixed(2);
+  document.getElementById('pmTotalPrice').innerText = `${total} DT`;
+}
+
+// --- Cart Integration ---
+window.handleModalAddToCart = function () {
+  if (!state.modal.selectedVariant) return;
+
+  const p = state.modal.product;
+  const v = state.modal.selectedVariant;
+  const qty = state.modal.qty;
+
+  const cartItem = {
+    id: p.id,
+    name: p.name,
+    price: v.price * (1 - (p.discount || 0) / 100),
+    unit: v.unit,
+    variantId: v.id,
+    variantName: v.variant_name,
+    quantity: qty
   };
 
-  // Ajouter la quantité sélectionnée
-  for (let i = 0; i < state.modalQty; i++) {
-    if (typeof window.addToCartFromMenu === 'function') {
-      window.addToCartFromMenu(product);
-    }
-  }
-
-  closeModal();
-}
-
-function closeModal() {
-  const modal = document.getElementById('productModal');
-  if (modal) modal.classList.remove('active');
-}
-
-// Fonction appelée par menu.js pour ajouter au panier via cart.js
-window.addToCartFromMenu = function (product) {
-  // Utiliser les fonctions de cart.js
-  const cart = JSON.parse(localStorage.getItem('ohmeals_cart') || '[]');
+  // Use ohmeals_cart key for compatibility with cart.js
+  const CART_KEY = 'ohmeals_cart';
+  let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
 
   const existingIndex = cart.findIndex(
-    item => item.id === product.id && item.variantId === product.variantId
+    item => item.id === cartItem.id && item.variantId === cartItem.variantId
   );
 
   if (existingIndex > -1) {
-    cart[existingIndex].quantity += 1;
+    cart[existingIndex].quantity += qty;
   } else {
-    cart.push({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      unit: product.unit,
-      variantId: product.variantId || null,
-      variantName: product.variantName || '',
-      quantity: 1
-    });
+    cart.push(cartItem);
   }
 
-  localStorage.setItem('ohmeals_cart', JSON.stringify(cart));
+  // Save and Update UI
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
 
-  // Mettre à jour le badge
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const badge = document.getElementById('cart-count');
-  if (badge) {
-    badge.textContent = totalItems;
-    badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+  // Call legacy functions if they exist in cart.js
+  if (typeof window.updateCartBadge === 'function') {
+    window.updateCartBadge();
   }
+
+  // Show visual +1 feedback
+  if (typeof window.showAddToCartAnimation === 'function') {
+    window.showAddToCartAnimation(qty);
+  }
+
+  if (typeof window.showNotification === 'function') {
+    window.showNotification(`${p.name} ajouté au panier !`);
+  } else {
+    showToast(`${p.name} ajouté au panier !`);
+  }
+
+  closeModal();
 };
 
-function showCartNotification(message) {
-  let notif = document.getElementById('cart-notification');
-  if (!notif) {
-    notif = document.createElement('div');
-    notif.id = 'cart-notification';
-    notif.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #28a745;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.3s;
-    `;
-    document.body.appendChild(notif);
+function showToast(msg) {
+  const toast = document.getElementById('pmToast');
+  if (toast) {
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
   }
-
-  notif.textContent = message;
-  notif.style.opacity = '1';
-
-  setTimeout(() => {
-    notif.style.opacity = '0';
-  }, 2000);
 }

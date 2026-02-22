@@ -443,9 +443,9 @@
 
   <script type="text/babel">
     const currentUser = {
-      id: {{ current_user.id }},
-    username: "{{ current_user.username }}",
-      email: "{{ current_user.email }}"
+      id: parseInt("{{ current_user.id if current_user.is_authenticated else 0 }}"),
+      username: "{{ current_user.username if current_user.is_authenticated else 'Guest' }}",
+      email: "{{ current_user.email if current_user.is_authenticated else '' }}"
     };
     {% raw %}
     const { useState, useEffect, useMemo } = React;
@@ -566,7 +566,8 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [editingProduct, setEditingProduct] = useState(null);
       const [formData, setFormData] = useState({
-        name: "", description: "", category: "snack", taste: "sale", image: "", is_active: true,
+        name: "", description: "", category: "snack", taste: "sale", image: "", video_url: "", is_active: true, discount: 0,
+        images: [],
         variants: [{ variant_name: "", unit: "piece", price: "", is_available: true, is_default: true }]
       });
       const [sortType, setSortType] = useState("default");
@@ -577,14 +578,20 @@
       };
 
       const resetForm = () => ({
-        name: "", description: "", category: "snack", taste: "sale", image: "", is_active: true,
+        name: "", description: "", category: "snack", taste: "sale", image: "", video_url: "", is_active: true, discount: 0,
+        images: [],
         variants: [{ variant_name: "", unit: "piece", price: "", is_available: true, is_default: true }]
       });
 
       const handleOpenModal = (product = null) => {
         if (product) {
           setEditingProduct(product);
-          setFormData({ ...product, variants: product.variants.map(v => ({ ...v })) });
+          setFormData({
+            ...product,
+            video_url: product.video_url || "",
+            images: product.images ? product.images.map(img => ({ ...img })) : [],
+            variants: product.variants.map(v => ({ ...v }))
+          });
         } else {
           setEditingProduct(null);
           setFormData(resetForm());
@@ -592,13 +599,43 @@
         setIsModalOpen(true);
       };
 
-      const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
+      // Multi-image upload handler
+      const handleMultiImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
           const reader = new FileReader();
-          reader.onloadend = () => setFormData({ ...formData, image: reader.result });
+          reader.onloadend = () => {
+            setFormData(prev => {
+              const newImages = [...prev.images, {
+                image_url: reader.result,
+                position: prev.images.length + 1,
+                is_primary: prev.images.length === 0
+              }];
+              return { ...prev, images: newImages, image: newImages.find(i => i.is_primary)?.image_url || newImages[0]?.image_url || "" };
+            });
+          };
           reader.readAsDataURL(file);
-        }
+        });
+        // Reset file input
+        e.target.value = '';
+      };
+
+      const removeImage = (idx) => {
+        setFormData(prev => {
+          let newImages = prev.images.filter((_, i) => i !== idx);
+          // If we removed the primary, set the first one as primary
+          if (newImages.length > 0 && !newImages.some(img => img.is_primary)) {
+            newImages[0].is_primary = true;
+          }
+          return { ...prev, images: newImages, image: newImages.find(i => i.is_primary)?.image_url || newImages[0]?.image_url || "" };
+        });
+      };
+
+      const setPrimaryImage = (idx) => {
+        setFormData(prev => {
+          const newImages = prev.images.map((img, i) => ({ ...img, is_primary: i === idx }));
+          return { ...prev, images: newImages, image: newImages[idx]?.image_url || "" };
+        });
       };
 
       const handleVariantChange = (index, field, value) => {
@@ -624,7 +661,15 @@
 
         const payload = {
           name: formData.name, description: formData.description, category: formData.category,
-          taste: formData.taste, image: formData.image, is_active: formData.is_active
+          taste: formData.taste, is_active: formData.is_active,
+          discount: parseFloat(formData.discount) || 0,
+          video_url: formData.video_url || "",
+          images: formData.images.map((img, i) => ({
+            image_url: img.image_url,
+            position: i + 1,
+            is_primary: img.is_primary || false
+          })),
+          image: formData.images.find(i => i.is_primary)?.image_url || formData.images[0]?.image_url || formData.image || ""
         };
 
         if (editingProduct) {
@@ -680,7 +725,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Image</th><th>Produit</th><th>Catégorie</th><th>Goût</th><th>Prix</th><th>Statut</th><th>Actions</th>
+                  <th>Image</th><th>Produit</th><th>Catégorie</th><th>Goût</th><th>Prix</th><th>Remise</th><th>Média</th><th>Statut</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -694,6 +739,13 @@
                     <td>{p.taste}</td>
                     <td style={{ color: "var(--accent)", fontWeight: "bold" }}>
                       {p.variants?.find(v => v.is_default)?.price || p.variants[0]?.price} DT
+                    </td>
+                    <td>{p.discount > 0 ? <span className="badge" style={{ background: '#e74c3c', color: '#fff' }}>-{p.discount}%</span> : '—'}</td>
+                    <td>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        <i className="fas fa-images" style={{ marginRight: '4px' }}></i>{p.images ? p.images.length : 0}
+                        {p.video_url ? <span style={{ marginLeft: '6px' }}><i className="fas fa-video"></i></span> : null}
+                      </span>
                     </td>
                     <td>
                       <span className={`badge ${p.is_active ? 'success' : 'danger'}`}>
@@ -713,21 +765,52 @@
           {isModalOpen && (
             <Modal onClose={() => setIsModalOpen(false)} title={editingProduct ? "Modifier Produit" : "Ajouter Produit"} size="lg">
               <form onSubmit={handleSubmit}>
+                {/* Multi-Image Gallery */}
                 <div className="variant-row">
-                  <label>Image</label>
-                  <input type="file" className="input-control" accept="image/*" onChange={handleImageUpload} />
-                  {formData.image && <div style={{ marginTop: '10px', textAlign: 'center' }}><img src={formData.image} alt="preview" style={{ maxHeight: '100px' }} /></div>}
+                  <label style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+                    <i className="fas fa-images" style={{ marginRight: '6px', color: 'var(--accent)' }}></i>Images ({formData.images.length})
+                  </label>
+                  {formData.images.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                      {formData.images.map((img, idx) => (
+                        <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: img.is_primary ? '2px solid var(--accent)' : '2px solid var(--border)' }}>
+                          <img src={img.image_url} alt={`img-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: '2px' }}>
+                            <button type="button" onClick={() => removeImage(idx)} style={{ background: 'rgba(239,68,68,0.9)', border: 'none', color: '#fff', width: '20px', height: '20px', cursor: 'pointer', fontSize: '0.65rem', borderRadius: '0 0 0 4px' }}>✕</button>
+                          </div>
+                          <button type="button" onClick={() => setPrimaryImage(idx)} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: img.is_primary ? 'var(--accent)' : 'rgba(0,0,0,0.6)', border: 'none', color: img.is_primary ? '#000' : '#fff', fontSize: '0.55rem', padding: '2px', cursor: 'pointer' }}>
+                            {img.is_primary ? '★ Principal' : 'Principal'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <input type="file" className="input-control" accept="image/*" multiple onChange={handleMultiImageUpload} />
+                  <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Vous pouvez sélectionner plusieurs images. Cliquez "Principal" pour définir l'image principale.</small>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: '15px' }}>
+
+                {/* Video URL */}
+                <div className="variant-row" style={{ marginTop: '10px' }}>
+                  <label style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+                    <i className="fas fa-video" style={{ marginRight: '6px', color: 'var(--accent)' }}></i>Vidéo (URL)
+                  </label>
+                  <input className="input-control" placeholder="https://www.youtube.com/watch?v=... ou URL .mp4" value={formData.video_url || ''} onChange={e => setFormData({ ...formData, video_url: e.target.value })} />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: '15px', marginTop: '15px' }}>
                   <input className="input-control" placeholder="Nom" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                   <select className="input-control" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                     <option value="snack">Snack</option><option value="plat">Plat</option><option value="salade">Salade</option>
                   </select>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: '15px' }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <textarea className="input-control" rows="3" placeholder="Description du produit..." value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ width: '100%', resize: 'vertical' }}></textarea>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "15px", marginBottom: '15px' }}>
                   <select className="input-control" value={formData.taste} onChange={e => setFormData({ ...formData, taste: e.target.value })}>
                     <option value="sale">Salé</option><option value="sucré">Sucré</option>
                   </select>
+                  <input type="number" className="input-control" placeholder="Remise %" min="0" max="100" value={formData.discount || ''} onChange={e => setFormData({ ...formData, discount: e.target.value })} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({ ...formData, is_active: e.target.checked })} /> <span>Actif</span>
                   </div>
@@ -1467,8 +1550,8 @@
       const [summary, setSummary] = useState(null);
       const [revenueData, setRevenueData] = useState([]);
       const [expensesChart, setExpensesChart] = useState([]);
-      const [expenses, setExpenses] = useState([]);
-      const [expenseMeta, setExpenseMeta] = useState({ total: 0, page: 1, pages: 1 });
+      const [transactions, setTransactions] = useState([]);
+      const [transMeta, setTransMeta] = useState({ total: 0, page: 1, pages: 1 });
       const [categories, setCategories] = useState([]);
       const [showModal, setShowModal] = useState(false);
       const [editingExpense, setEditingExpense] = useState(null);
@@ -1482,17 +1565,20 @@
 
       const fetchData = async () => {
         setLoadingAcc(true);
-        const [sumRes, revRes, expChartRes, expListRes, catRes] = await Promise.all([
+        const [sumRes, revRes, expChartRes, transListRes, catRes] = await Promise.all([
           apiRequest(`/accounting/summary?period=${period}`),
           apiRequest(`/accounting/revenue-chart?granularity=${period === 'today' ? 'daily' : period === 'week' ? 'daily' : 'daily'}`),
           apiRequest('/accounting/expenses-chart'),
-          apiRequest('/accounting/expenses'),
+          apiRequest(`/accounting/transactions?period=${period}`),
           apiRequest('/accounting/categories')
         ]);
         if (sumRes) setSummary(sumRes);
         if (revRes) setRevenueData(revRes);
         if (expChartRes) setExpensesChart(expChartRes);
-        if (expListRes) { setExpenses(expListRes.expenses || []); setExpenseMeta({ total: expListRes.total, page: expListRes.page, pages: expListRes.pages }); }
+        if (transListRes) {
+          setTransactions(transListRes.transactions || []);
+          setTransMeta({ total: transListRes.total, page: transListRes.page, pages: transListRes.pages });
+        }
         if (catRes) setCategories(catRes);
         setLoadingAcc(false);
       };
@@ -1626,28 +1712,46 @@
             </div>
           </div>
 
-          {/* Expenses Table */}
+          {/* Transactions Table */}
           <div className="flex-between" style={{ marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '600' }}><i className="fas fa-list" style={{ color: 'var(--accent)', marginRight: '8px' }}></i>Dépenses ({expenseMeta.total})</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600' }}><i className="fas fa-list" style={{ color: 'var(--accent)', marginRight: '8px' }}></i>Journal des Transactions ({transMeta.total})</h3>
             <button onClick={openAdd} className="btn btn-primary" style={{ padding: '8px 20px' }}>
-              <i className="fas fa-plus" style={{ marginRight: '6px' }}></i>Ajouter
+              <i className="fas fa-plus" style={{ marginRight: '6px' }}></i>Ajouter Dépense
             </button>
           </div>
           <div className="card" style={{ padding: 0 }}>
             <table>
-              <thead><tr><th>Date</th><th>Titre</th><th>Catégorie</th><th>Montant</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Date</th><th>Description</th><th>Type/Catégorie</th><th>Montant</th><th>Actions</th></tr></thead>
               <tbody>
-                {expenses.length === 0 ? (
-                  <tr><td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Aucune dépense enregistrée</td></tr>
-                ) : expenses.map(exp => (
-                  <tr key={exp.id}>
-                    <td>{exp.date}</td>
-                    <td>{exp.title}</td>
-                    <td><span className="badge neutral">{CATEGORY_LABELS[exp.category] || exp.category}</span></td>
-                    <td style={{ fontWeight: '600', color: '#e74c3c' }}>{exp.amount.toFixed(2)} DT</td>
+                {transactions.length === 0 ? (
+                  <tr><td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Aucune transaction enregistrée</td></tr>
+                ) : transactions.map(trans => (
+                  <tr key={trans.id}>
+                    <td>{trans.date}</td>
                     <td>
-                      <button onClick={() => openEdit(exp)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', marginRight: '8px' }}><i className="fas fa-edit"></i></button>
-                      <button onClick={() => handleDelete(exp.id)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}><i className="fas fa-trash"></i></button>
+                      <div style={{ fontWeight: trans.type === 'income' ? '600' : '400' }}>{trans.title}</div>
+                      {trans.type === 'income' && <div style={{ fontSize: '0.75rem', color: 'var(--success)' }}>Revenu lié à la commande</div>}
+                    </td>
+                    <td>
+                      {trans.type === 'income' ? (
+                        <span className="badge success">Vente</span>
+                      ) : (
+                        <span className="badge neutral">{CATEGORY_LABELS[trans.category] || trans.category}</span>
+                      )}
+                    </td>
+                    <td style={{ fontWeight: '600', color: trans.type === 'income' ? '#2ecc71' : '#e74c3c' }}>
+                      {trans.type === 'income' ? '+' : '-'}{trans.amount.toFixed(2)} DT
+                    </td>
+                    <td>
+                      {trans.type === 'expense' && (
+                        <>
+                          <button onClick={() => openEdit(trans)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', marginRight: '8px' }}><i className="fas fa-edit"></i></button>
+                          <button onClick={() => handleDelete(trans.id.replace('expense_', ''))} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' }}><i className="fas fa-trash"></i></button>
+                        </>
+                      )}
+                      {trans.type === 'income' && (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Verrouillé</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1656,11 +1760,11 @@
           </div>
 
           {/* Pagination */}
-          {expenseMeta.pages > 1 && (
+          {transMeta.pages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
-              {Array.from({ length: expenseMeta.pages }, (_, i) => (
-                <button key={i} onClick={async () => { const res = await apiRequest(`/accounting/expenses?page=${i + 1}`); if (res) { setExpenses(res.expenses); setExpenseMeta({ total: res.total, page: res.page, pages: res.pages }); } }}
-                  className={`btn ${expenseMeta.page === i + 1 ? 'btn-primary' : 'btn-secondary'}`}
+              {Array.from({ length: transMeta.pages }, (_, i) => (
+                <button key={i} onClick={async () => { const res = await apiRequest(`/accounting/transactions?period=${period}&page=${i + 1}`); if (res) { setTransactions(res.transactions); setTransMeta({ total: res.total, page: res.page, pages: res.pages }); } }}
+                  className={`btn ${transMeta.page === i + 1 ? 'btn-primary' : 'btn-secondary'}`}
                   style={{ padding: '6px 12px', fontSize: '0.8rem' }}>{i + 1}</button>
               ))}
             </div>
@@ -1771,9 +1875,10 @@
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '20px' }}>Tableau de Bord</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
                   {[
-                    { label: 'Commandes', val: orders.length, color: 'var(--accent)', icon: 'fa-shopping-basket' },
-                    { label: 'Revenu Total', val: (orders.reduce((a, o) => a + (parseFloat(o.total_price || o.total) || 0), 0)).toFixed(2) + ' DT', color: 'var(--success)', icon: 'fa-wallet' },
-                    { label: 'Produits Actifs', val: products.filter(p => p.is_active).length, color: 'var(--info)', icon: 'fa-box' }
+                    { label: 'Commandes (Total)', val: (stats ? stats.total_orders : 0), color: 'var(--accent)', icon: 'fa-shopping-basket' },
+                    { label: "Chiffre d'Affaires (Total)", val: (stats ? stats.total_revenue : 0).toFixed(2) + ' DT', color: 'var(--success)', icon: 'fa-wallet' },
+                    { label: 'Bénéfice Net (Ce Mois)', val: (stats ? stats.total_net_profit : 0).toFixed(2) + ' DT', color: 'var(--info)', icon: 'fa-balance-scale' },
+                    { label: 'Produits Actifs', val: products.filter(p => p.is_active).length, color: 'var(--warning)', icon: 'fa-box' }
                   ].map((stat, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${stat.color}`, display: 'flex', alignItems: 'center', gap: '20px' }}>
                       <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: `${stat.color}20`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>

@@ -89,7 +89,35 @@ function updateCartBadge() {
     if (badge) {
         badge.textContent = totalItems;
         badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+
+        // Pulse animation on badge update
+        badge.classList.remove('pulse');
+        void badge.offsetWidth; // trigger reflow
+        badge.classList.add('pulse');
     }
+}
+
+/**
+ * Affiche une animation flottante (+1) près de l'icône panier
+ * @param {number} qty - La quantité ajoutée
+ */
+function showAddToCartAnimation(qty = 1) {
+    const cartLink = document.querySelector('.cart_link') || document.querySelector('.floating-cart');
+    if (!cartLink) return;
+
+    const animEl = document.createElement('div');
+    animEl.className = 'cart-feedback-anim';
+    animEl.innerText = `+${qty}`;
+
+    // Positionner près du lien panier
+    const rect = cartLink.getBoundingClientRect();
+    animEl.style.left = `${rect.left + rect.width / 2}px`;
+    animEl.style.top = `${rect.top}px`;
+
+    document.body.appendChild(animEl);
+
+    // Supprimer après l'animation
+    setTimeout(() => animEl.remove(), 1000);
 }
 
 function calculateTotal() {

@@ -30,6 +30,8 @@
 
   <!-- Custom styles for this template -->
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+  <!-- Modern Product Display Styles -->
+  <link href="{{ url_for('static', filename='css/products.css') }}" rel="stylesheet" />
   <!-- responsive style -->
   <link href="{{ url_for('static', filename='css/responsive.css') }}" rel="stylesheet" />
 </head>
@@ -37,7 +39,7 @@
 <body>
   <div class="hero_area">
     <div class="bg-box">
-      <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="" />
+      <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="" id="hero-bg" />
     </div>
     <!-- header section starts -->
     <header class="header_section">
@@ -70,10 +72,19 @@
               <a href="{{ url_for('auth.login') }}" class="user_link">
                 <i class="fa fa-user" aria-hidden="true"></i>
               </a>
-              <a class="cart_link" href="{{ url_for('menu.book') }}" style="position:relative;">
+              <a class="cart_link" href="{{ url_for('menu.book') }}" style="position: relative">
                 <i class="fa fa-shopping-cart"></i>
-                <span id="cart-count"
-                  style="position:absolute;top:-8px;right:-8px;background:#ffbe33;color:#fff;padding:2px 6px;border-radius:50%;font-size:0.7rem;display:none;">0</span>
+                <span id="cart-count" style="
+                      position: absolute;
+                      top: -8px;
+                      right: -8px;
+                      background: #ffbe33;
+                      color: #fff;
+                      padding: 2px 6px;
+                      border-radius: 50%;
+                      font-size: 0.7rem;
+                      display: none;
+                    ">0</span>
               </a>
               <a href="{{ url_for('menu.book') }}" class="order_online">Commander</a>
             </div>
@@ -93,9 +104,11 @@
                   <div class="detail-box">
                     <h1>Fast Food Restaurant</h1>
                     <p>
-                      {{ site_settings.get('index_description', 'Doloremque, itaque aperiam facilis rerum, commodi,
-                      temporibus sapiente ad mollitia laborum quam quisquam esse error unde. Tempora ex doloremque,
-                      labore, sunt repellat dolore, iste magni quos nihil ducimus libero ipsam.') }}
+                      {{ site_settings.get('index_description', 'Doloremque,
+                      itaque aperiam facilis rerum, commodi, temporibus
+                      sapiente ad mollitia laborum quam quisquam esse error
+                      unde. Tempora ex doloremque, labore, sunt repellat
+                      dolore, iste magni quos nihil ducimus libero ipsam.') }}
                     </p>
                     <div class="btn-box">
                       <a href="{{ url_for('menu.book') }}" class="btn1">Order Now</a>
@@ -112,9 +125,11 @@
                   <div class="detail-box">
                     <h1>Fast Food Restaurant</h1>
                     <p>
-                      {{ site_settings.get('index_description', 'Doloremque, itaque aperiam facilis rerum, commodi,
-                      temporibus sapiente ad mollitia laborum quam quisquam esse error unde. Tempora ex doloremque,
-                      labore, sunt repellat dolore, iste magni quos nihil ducimus libero ipsam.') }}
+                      {{ site_settings.get('index_description', 'Doloremque,
+                      itaque aperiam facilis rerum, commodi, temporibus
+                      sapiente ad mollitia laborum quam quisquam esse error
+                      unde. Tempora ex doloremque, labore, sunt repellat
+                      dolore, iste magni quos nihil ducimus libero ipsam.') }}
                     </p>
                     <div class="btn-box">
                       <a href="{{ url_for('menu.book') }}" class="btn1">Order Now</a>
@@ -131,9 +146,11 @@
                   <div class="detail-box">
                     <h1>Fast Food Restaurant</h1>
                     <p>
-                      {{ site_settings.get('index_description', 'Doloremque, itaque aperiam facilis rerum, commodi,
-                      temporibus sapiente ad mollitia laborum quam quisquam esse error unde. Tempora ex doloremque,
-                      labore, sunt repellat dolore, iste magni quos nihil ducimus libero ipsam.') }}
+                      {{ site_settings.get('index_description', 'Doloremque,
+                      itaque aperiam facilis rerum, commodi, temporibus
+                      sapiente ad mollitia laborum quam quisquam esse error
+                      unde. Tempora ex doloremque, labore, sunt repellat
+                      dolore, iste magni quos nihil ducimus libero ipsam.') }}
                     </p>
                     <div class="btn-box">
                       <a href="{{ url_for('menu.book') }}" class="btn1">Order Now</a>
@@ -156,132 +173,15 @@
     <!-- end slider section -->
   </div>
 
-  <!-- offer section -->
 
-  <section class="offer_section layout_padding-bottom">
-    <div class="offer_container">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="box">
-              <div class="img-box">
-                <img src="{{ url_for('static', filename='images/o1.jpg') }}" alt="" />
-              </div>
-              <div class="detail-box">
-                <h5>Tasty Thursdays</h5>
-                <h6><span>20%</span> Off</h6>
-                <a href="{{ url_for('menu.book') }}">
-                  Order Now
-                  <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 456.029 456.029"
-                    style="enable-background: new 0 0 456.029 456.029" xml:space="preserve">
-                    <g>
-                      <g>
-                        <path d="M345.6,338.862c-29.184,0-53.248,23.552-53.248,53.248c0,29.184,23.552,53.248,53.248,53.248
-                     c29.184,0,53.248-23.552,53.248-53.248C398.336,362.926,374.784,338.862,345.6,338.862z" />
-                      </g>
-                    </g>
-                    <g>
-                      <g>
-                        <path d="M439.296,84.91c-1.024,0-2.56-0.512-4.096-0.512H112.64l-5.12-34.304C104.448,27.566,84.992,10.67,61.952,10.67H20.48
-                     C9.216,10.67,0,19.886,0,31.15c0,11.264,9.216,20.48,20.48,20.48h41.472c2.56,0,4.608,2.048,5.12,4.608l31.744,216.064
-                     c4.096,27.136,27.648,47.616,55.296,47.616h212.992c26.624,0,49.664-18.944,55.296-45.056l33.28-166.4
-                     C457.728,97.71,450.56,86.958,439.296,84.91z" />
-                      </g>
-                    </g>
-                    <g>
-                      <g>
-                        <path d="M215.04,389.55c-1.024-28.16-24.576-50.688-52.736-50.688c-29.696,1.536-52.224,26.112-51.2,55.296
-                     c1.024,28.16,24.064,50.688,52.224,50.688h1.024C193.536,443.31,216.576,418.734,215.04,389.55z" />
-                      </g>
-                    </g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="box">
-              <div class="img-box">
-                <img src="{{ url_for('static', filename='images/o2.jpg') }}" alt="" />
-              </div>
-              <div class="detail-box">
-                <h5>Pizza Days</h5>
-                <h6><span>15%</span> Off</h6>
-                <a href="{{ url_for('menu.book') }}">
-                  Order Now
-                  <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 456.029 456.029"
-                    style="enable-background: new 0 0 456.029 456.029" xml:space="preserve">
-                    <g>
-                      <g>
-                        <path d="M345.6,338.862c-29.184,0-53.248,23.552-53.248,53.248c0,29.184,23.552,53.248,53.248,53.248
-                     c29.184,0,53.248-23.552,53.248-53.248C398.336,362.926,374.784,338.862,345.6,338.862z" />
-                      </g>
-                    </g>
-                    <g>
-                      <g>
-                        <path d="M439.296,84.91c-1.024,0-2.56-0.512-4.096-0.512H112.64l-5.12-34.304C104.448,27.566,84.992,10.67,61.952,10.67H20.48
-                     C9.216,10.67,0,19.886,0,31.15c0,11.264,9.216,20.48,20.48,20.48h41.472c2.56,0,4.608,2.048,5.12,4.608l31.744,216.064
-                     c4.096,27.136,27.648,47.616,55.296,47.616h212.992c26.624,0,49.664-18.944,55.296-45.056l33.28-166.4
-                     C457.728,97.71,450.56,86.958,439.296,84.91z" />
-                      </g>
-                    </g>
-                    <g>
-                      <g>
-                        <path d="M215.04,389.55c-1.024-28.16-24.576-50.688-52.736-50.688c-29.696,1.536-52.224,26.112-51.2,55.296
-                     c1.024,28.16,24.064,50.688,52.224,50.688h1.024C193.536,443.31,216.576,418.734,215.04,389.55z" />
-                      </g>
-                    </g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                    <g></g>
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- end offer section -->
   <!-- food section -->
-  <section class="food_section layout_padding-bottom">
+  <section class="food_section layout_padding-bottom mt-5">
     <div class="container">
       <div class="heading_container heading_center">
         <h2>Notre Menu</h2>
       </div>
 
-      <!-- Filtres de Catégorie -->
+      <!-- Category Filters (Modern) -->
       <ul class="filters_menu" id="categoryFilters">
         <li class="active" data-filter="*">Tous</li>
         <li data-filter="snack">Snacks</li>
@@ -289,7 +189,7 @@
         <li data-filter="salade">Salades</li>
       </ul>
 
-      <!-- Contrôles de Tri -->
+      <!-- Sorting Controls (Modern) -->
       <div class="sorting-controls">
         <select id="sortPrice" class="sort-select">
           <option value="default">Tri: Prix par défaut</option>
@@ -304,64 +204,84 @@
       </div>
 
       <div class="filters-content">
-        <!-- Les produits injectés ici via JS -->
+        <!-- Data for JS -->
+        <div id="products-data" data-products='{{ (products or []) | tojson | safe }}' style="display: none;"></div>
+
         <script>
-          window.productsDB = {{ products | default ([]) | tojson }};
+          // Safe way to get data from Jinja to JS without lint errors
+          const productsDataEl = document.getElementById('products-data');
+          window.productsDB = productsDataEl ? JSON.parse(productsDataEl.getAttribute('data-products')) : [];
         </script>
-        <div class="row grid" id="productsGrid"></div>
+        <!-- Modern Grid -->
+        <div id="productsGrid"></div>
       </div>
 
-      <div class="btn-box text-center mt-4">
-        <a href="#" class="btn btn-outline-dark rounded-pill px-4">Voir plus</a>
+      <div class="btn-box text-center mt-5">
+        <a href="{{ url_for('menu.menu') }}" class="btn btn-outline-dark rounded-pill px-5 py-2">Découvrir tout le
+          menu</a>
       </div>
     </div>
   </section>
 
-  <!-- Modal Produit -->
-  <!-- Modal Produit -->
-  <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="fw-bold" id="modalProductName">Nom du produit</h5>
-          <button type="button" class="btn-close" onclick="closeModal()">
-            <span>&times;</span>
-          </button>
+  <!-- Modern Animated Modal (Popup) -->
+  <div class="pm-overlay" id="productModalOverlay">
+    <div class="pm-box">
+      <!-- Media Section -->
+      <div class="pm-gallery" id="pmGallery">
+        <!-- Injected by JS -->
+      </div>
+      <!-- Thumbnails -->
+      <div class="pm-thumbnails" id="pmThumbnails">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Content Section -->
+      <div class="pm-content">
+        <div class="pm-header">
+          <h2 class="pm-title" id="pmTitle">Product Name</h2>
+          <button class="pm-close" onclick="closeModal()">✕</button>
         </div>
-        <div class="modal-body">
-          <p id="modalProductDesc" class="text-muted small">Description courte ici...</p>
 
-          <hr />
+        <div class="pm-badges-row" id="pmBadgesRow">
+          <!-- Injected by JS -->
+        </div>
 
-          <h6 class="mb-3">Choisir la variante :</h6>
-          <div id="modalVariantsList">
-            <!-- Variantes injectées par JS -->
+        <p class="pm-desc" id="pmDesc">Description...</p>
+
+        <!-- Dynamic Video Section (Hidden if none) -->
+        <div class="pm-video-section" id="pmVideoSection" style="display: none;">
+          <h6><i class="fa fa-play-circle"></i> Aperçu Vidéo</h6>
+          <div id="pmVideoContainer"></div>
+        </div>
+
+        <hr class="pm-divider">
+
+        <h6 class="pm-variants-label">Choisissez une option :</h6>
+        <div class="pm-variants-grid" id="pmVariantsGrid">
+          <!-- Injected by JS -->
+        </div>
+
+        <div class="pm-qty-row">
+          <div class="pm-qty-controls">
+            <button class="pm-qty-btn" onclick="updateModalQty(-1)">-</button>
+            <span class="pm-qty-value" id="pmQtyValue">1</span>
+            <button class="pm-qty-btn" onclick="updateModalQty(1)">+</button>
           </div>
-
-          <hr />
-
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="quantity-control">
-              <button class="btn-qty" onclick="updateModalQty(-1)">-</button>
-              <span id="modalQty" class="fw-bold mx-2">1</span>
-              <button class="btn-qty" onclick="updateModalQty(1)">+</button>
-            </div>
-            <div class="text-end">
-              <small>Total</small>
-              <div id="modalTotalPrice" class="total-price-display">0.00 DT</div>
-            </div>
+          <div class="text-end">
+            <span class="pm-total-label">Prix Total</span>
+            <div class="pm-total-price" id="pmTotalPrice">0.00 DT</div>
           </div>
         </div>
-        <div class="modal-footer border-0 justify-content-center" style="margin-top: 20px;">
-          <button type="button" class="btn btn-primary w-50 py-2 rounded-pill" onclick="addToCart()"
-            style="background-color: var(--primary-color); color: #000;">
-            Ajouter au panier
-          </button>
-        </div>
+
+        <button class="pm-add-btn" onclick="handleModalAddToCart()">
+          <i class="fa fa-shopping-basket"></i> Ajouter au panier
+        </button>
       </div>
     </div>
   </div>
-  <!-- end food section -->
+
+  <!-- Toast Notification -->
+  <div class="pm-toast" id="pmToast">Produit ajouté !</div>
 
   <!-- about section -->
   <section class="about_section layout_padding">
@@ -369,23 +289,21 @@
       <div class="row">
         <div class="col-md-6">
           <div class="img-box">
-            <img src="{{ url_for('static', filename='images/about-img.png') }}" alt="" />
+            <img src="{{ url_for('static', filename='images/about1-img.png') }}" alt="" />
           </div>
         </div>
         <div class="col-md-6">
           <div class="detail-box">
             <div class="heading_container">
-              <h2>We Are Feane</h2>
+              <h2>À Propos de Oh Meals</h2>
             </div>
             <p>
-              There are many variations of passages of Lorem Ipsum available,
-              but the majority have suffered alteration in some form, by
-              injected humour, or randomised words which don't look even
-              slightly believable. If you are going to use a passage of Lorem
-              Ipsum, you need to be sure there isn't anything embarrassing
-              hidden in the middle of text. All
+              Bienvenue chez Oh Meals, où chaque bouchée est une explosion de saveurs. Nous nous engageons à vous offrir
+              le meilleur de la cuisine faite maison, avec des ingrédients frais et une passion pour l'excellence
+              culinaire.
+              Découvrez nos spécialités préparées avec amour pour satisfaire toutes vos envies.
             </p>
-            <a href="{{ url_for('page.about') }}"> Read More </a>
+            <a href="{{ url_for('page.about') }}"> En savoir plus </a>
           </div>
         </div>
       </div>
@@ -393,118 +311,15 @@
   </section>
   <!-- end about section -->
 
-  <!-- book section -->
-  <section class="book_section layout_padding">
-    <div class="container">
-      <div class="heading_container">
-        <h2>Book A Table</h2>
-      </div>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="form_container">
-            <form action="{{ url_for('menu.book') }}" method="POST">
-              <div>
-                <input type="text" name="name" class="form-control" placeholder="Your Name" />
-              </div>
-              <div>
-                <input type="text" name="phone" class="form-control" placeholder="Phone Number" />
-              </div>
-              <div>
-                <input type="email" name="email" class="form-control" placeholder="Your Email" />
-              </div>
-              <div>
-                <select name="persons" class="form-control nice-select wide">
-                  <option value="" disabled selected>
-                    How many persons?
-                  </option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                </select>
-              </div>
-              <div>
-                <input type="date" name="date" class="form-control" />
-              </div>
-              <div class="btn_box">
-                <button type="submit">Book Now</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="map_container">
-            <div id="googleMap"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- end book section -->
-
-  <!-- client section -->
-  <section class="client_section layout_padding-bottom">
-    <div class="container">
-      <div class="heading_container heading_center psudo_white_primary mb_45">
-        <h2>What Says Our Customers</h2>
-      </div>
-      <div class="carousel-wrap row">
-        <div class="owl-carousel client_owl-carousel">
-          <div class="item">
-            <div class="box">
-              <div class="detail-box">
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna
-                  aliqua. Ut enim ad minim veniam
-                </p>
-                <h6>Moana Michell</h6>
-                <p>magna aliqua</p>
-              </div>
-              <div class="img-box">
-                <img src="{{ url_for('static', filename='images/client1.jpg') }}" alt="" class="box-img" />
-              </div>
-            </div>
-          </div>
-          <div class="item">
-            <div class="box">
-              <div class="detail-box">
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna
-                  aliqua. Ut enim ad minim veniam
-                </p>
-                <h6>Mike Hamell</h6>
-                <p>magna aliqua</p>
-              </div>
-              <div class="img-box">
-                <img src="{{ url_for('static', filename='images/client2.jpg') }}" alt="" class="box-img" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- end client section -->
-
   <!-- footer section -->
   {% include 'includes/footer.html' %}
-  <!-- footer section -->
+  <!-- end footer section -->
 
-  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-    crossorigin="anonymous"></script>
   <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-  <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
   <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap"></script>
-  <!-- End Google Map -->
 </body>
 
 </html>
