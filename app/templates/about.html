@@ -17,7 +17,7 @@
   <!-- Favicon -->
   <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png" />
 
-  <title>Oh Meals</title>
+  <title>Ohmeals</title>
 
   <!-- Bootstrap core CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" />
@@ -51,7 +51,7 @@
       <div class="container">
         <nav class="navbar navbar-expand-lg custom_nav-container">
           <a class="navbar-brand" href="{{ url_for('page.index') }}">
-            <span>Oh Meals</span>
+            <span>Ohmeals</span>
           </a>
 
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
@@ -62,14 +62,14 @@
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mx-auto">
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('page.index') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('page.index') }}">Accueil</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('menu.menu') }}">Menu</a>
               </li>
               <li class="nav-item active">
                 <a class="nav-link" href="{{ url_for('page.about') }}">
-                  About <span class="sr-only">(current)</span>
+                  À propos <span class="sr-only">(courant)</span>
                 </a>
               </li>
             </ul>
@@ -83,7 +83,7 @@
                       position: absolute;
                       top: -8px;
                       right: -8px;
-                      background: #ffbe33;
+                      background: var(--primary);
                       color: #fff;
                       padding: 2px 6px;
                       border-radius: 50%;
@@ -113,13 +113,16 @@
         <div class="col-md-6">
           <div class="detail-box">
             <div class="heading_container">
-              <h2>We Are Feane</h2>
+              <h2>Nous sommes Ohmeals</h2>
             </div>
             <p>
-              {{ site_settings.get('about_description', "There are many variations of passages of Lorem Ipsum available,
-              but the majority have suffered alteration in some form, by injected humour, or randomised words which
-              don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure
-              there isn't anything embarrassing hidden in the middle of text. All") }}
+              {{ site_settings.get('about_description', "There are many
+              variations of passages of Lorem Ipsum available, but the
+              majority have suffered alteration in some form, by injected
+              humour, or randomised words which don't look even slightly
+              believable. If you are going to use a passage of Lorem Ipsum,
+              you need to be sure there isn't anything embarrassing hidden in
+              the middle of text. All") }}
             </p>
           </div>
         </div>

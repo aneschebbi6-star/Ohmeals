@@ -1,0 +1,58 @@
+<footer class="footer_section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 footer-col">
+                <div class="footer_contact">
+                    <h4>Contactez-nous</h4>
+                    <div class="contact_link_box">
+                        <a href="#">
+                            <i class="fa fa-map-marker" aria-hidden="true"></i>
+                            <span> {{ site_settings.get('address', 'Location') }} </span>
+                        </a>
+                        <a href="tel:{{ site_settings.get('phone', '+01 1234567890') }}">
+                            <i class="fa fa-phone" aria-hidden="true"></i>
+                            <span> {{ site_settings.get('phone', '+01 1234567890') }} </span>
+                        </a>
+                        <a href="mailto:{{ site_settings.get('email', 'contact@ohmeals.com') }}">
+                            <i class="fa fa-envelope" aria-hidden="true"></i>
+                            <span> {{ site_settings.get('email', 'contact@ohmeals.com') }} </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 footer-col">
+                <div class="footer_detail text-center">
+                    <a href="{{ url_for('page.index') }}" class="footer-logo">
+                        Ohmeals
+                    </a>
+                    <p>
+                        L'excellence du service traiteur marocain. Tradition, passion et raffinement dans chaque plat.
+                    </p>
+                    <div class="footer_social">
+                        {% if site_settings.get('facebook_url') %}
+                        <a href="{{ site_settings.get('facebook_url') }}"><i class="fa fa-facebook"
+                                aria-hidden="true"></i></a>
+                        {% endif %}
+                        {% if site_settings.get('instagram_url') %}
+                        <a href="{{ site_settings.get('instagram_url') }}"><i class="fa fa-instagram"
+                                aria-hidden="true"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 footer-col text-center text-md-right">
+                <h4>Savoir-faire</h4>
+                <p>100% Artisanal</p>
+                <p>Produits Frais & Locaux</p>
+                <p>Livraison Sécurisée</p>
+            </div>
+        </div>
+        <div class="footer-info">
+            <p>
+                &copy; <span id="displayYear"></span> Ohmeals. Tous droits réservés.
+                <br>
+                Service de Traiteur Haut de Gamme
+            </p>
+        </div>
+    </div>
+</footer>

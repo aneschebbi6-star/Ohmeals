@@ -12,6 +12,10 @@ from app.extensions import db
 class Product(db.Model):
     """Product model with category support."""
     __tablename__ = 'products'
+    __table_args__ = (
+        db.Index('idx_product_category', 'category'),
+        db.CheckConstraint('discount >= 0 AND discount <= 100', name='check_discount_range'),
+    )
 
     CATEGORY_CHOICES = ('snack', 'plat', 'salade')  # Étendu avec 'salade'
 
@@ -115,6 +119,11 @@ class Product(db.Model):
 class ProductVariant(db.Model):
     """ProductVariant model linked to Product."""
     __tablename__ = 'product_variants'
+    __table_args__ = (
+        db.Index('idx_variant_product', 'product_id'),
+        db.CheckConstraint('price >= 0', name='check_positive_price'),
+        db.CheckConstraint('stock_quantity >= 0', name='check_positive_stock'),
+    )
 
     UNIT_CHOICES = ('kilo', 'piece', 'personne')
 

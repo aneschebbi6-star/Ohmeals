@@ -1,6 +1,6 @@
-# 🔍 OHMEALS — Audit de Failles & Tips d'Amélioration
+# 🔍 Ohmeals — Audit de Failles & Tips d'Amélioration
 
-> Analyse complète du site OHMEALS : failles de sécurité, vulnérabilités et recommandations.
+> Analyse complète du site Ohmeals : failles de sécurité, vulnérabilités et recommandations.
 
 ---
 

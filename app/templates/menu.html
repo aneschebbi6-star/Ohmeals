@@ -13,7 +13,7 @@
   <meta name="author" content="" />
   <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png" />
 
-  <title>Oh Meals</title>
+  <title>Ohmeals</title>
 
   <!-- bootstrap core css -->
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}" />
@@ -48,7 +48,7 @@
       <div class="container">
         <nav class="navbar navbar-expand-lg custom_nav-container">
           <a class="navbar-brand" href="{{ url_for('page.index') }}">
-            <span>oh Meals</span>
+            <span>Ohmeals</span>
           </a>
 
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
@@ -59,13 +59,13 @@
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mx-auto">
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('page.index') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('page.index') }}">Accueil</a>
               </li>
               <li class="nav-item active">
-                <a class="nav-link" href="{{ url_for('menu.menu') }}">Menu <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="{{ url_for('menu.menu') }}">Menu <span class="sr-only">(courant)</span></a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('page.about') }}">About</a>
+                <a class="nav-link" href="{{ url_for('page.about') }}">À propos</a>
               </li>
             </ul>
 
@@ -79,7 +79,7 @@
                       position: absolute;
                       top: -8px;
                       right: -8px;
-                      background: #ffbe33;
+                      background: var(--primary);
                       color: #fff;
                       padding: 2px 6px;
                       border-radius: 50%;
@@ -155,7 +155,7 @@
       <!-- Content Section -->
       <div class="pm-content">
         <div class="pm-header">
-          <h2 class="pm-title" id="pmTitle">Product Name</h2>
+          <h2 class="pm-title" id="pmTitle">Nom du produit</h2>
           <button class="pm-close" onclick="closeModal()">✕</button>
         </div>
 

@@ -1,4 +1,4 @@
-# OHMEALS - Traiteur Marocain 🇲🇦
+# Ohmeals - Traiteur Marocain 🇲🇦
 
 Application web pour un traiteur marocain, construite avec **Flask MVC** et **Bootstrap 5**.
 

@@ -8,6 +8,10 @@ from app.extensions import db
 class Order(db.Model):
     """Order model - delivery only."""
     __tablename__ = 'orders'
+    __table_args__ = (
+        db.Index('idx_order_status', 'status'),
+        db.CheckConstraint('total_price >= 0', name='check_positive_total'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     
@@ -43,6 +47,11 @@ class Order(db.Model):
 class OrderItem(db.Model):
     """Order item - links products to orders with quantity."""
     __tablename__ = 'order_items'
+    __table_args__ = (
+        db.Index('idx_item_order', 'order_id'),
+        db.CheckConstraint('quantity > 0', name='check_positive_qty'),
+        db.CheckConstraint('price >= 0', name='check_positive_item_price'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     

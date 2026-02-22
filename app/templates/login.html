@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Owl Carousel -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+
+  <!-- Nice Select -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/css/nice-select.min.css"
+    integrity="sha512-CruCP+TD3yXzlvvijET8wV5WxxEh5H8P4cmz0RFbKK6FlZ2sYl3AEsKlLPHbniXKSrDdFewhbmBK5skbdsASbQ=="
+    crossorigin="anonymous" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}" />
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  <!-- Responsive -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}" />
+  <!-- CSS INTERNE -->
+  <style>
+    :root {
+      --accent: #B68D40;
+      /* Heritage Gold */
+      --accent-hover: #9A7532;
+      --glass-bg: rgba(15, 17, 21, 0.75);
+      /* Obsidian base */
+      --glass-border: rgba(182, 141, 64, 0.15);
+      /* Heritage Gold edge */
+      --text-main: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.5);
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: #0a0a0a;
+      display: block;
+      /* Standard page flow */
+      margin: 0;
+      color: var(--text-main);
+    }
+
+    /* Fixed alignment for login section */
+    .login_section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 150px);
+      /* Adjust based on header height */
+    }
+
+    /* Background Animation */
+    .hero_area .bg-box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .hero_area .bg-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.15;
+      filter: grayscale(100%) brightness(0.5);
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+      border-color: rgba(255, 190, 51, 0.3);
+    }
+
+    .login-box h2 {
+      font-family: 'Forum', serif;
+      font-size: 2.8rem;
+      font-weight: 400;
+      color: var(--accent);
+      margin-bottom: 30px;
+      text-align: center;
+      letter-spacing: 1px;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-left: 5px;
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: white;
+      height: 50px;
+      border-radius: 14px;
+      padding: 12px 20px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255, 190, 51, 0.15);
+      color: white;
+    }
+
+    .form-control::placeholder {
+      color: #666;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, var(--accent), #ff9f00);
+      border: none;
+      height: 52px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #000;
+      margin-top: 15px;
+      box-shadow: 0 10px 25px -5px rgba(188, 147, 81, 0.3);
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(45deg, var(--accent-hover), var(--accent));
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(188, 147, 81, 0.4);
+      color: #000;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .eye-toggle {
+      position: absolute;
+      right: 18px;
+      top: 13px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .eye-toggle i {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      transition: color 0.3s ease;
+    }
+
+    .eye-toggle i:hover {
+      color: var(--accent);
+    }
+
+    .form-check-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .forgot-pass {
+      margin-top: 15px;
+      display: block;
+      text-align: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.3s ease;
+    }
+
+    .forgot-pass:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+
+<body class="sub_page">
+  <div class="hero_area">
+    <div class="bg-box">
+      <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="" />
+    </div>
+    <!-- header section starts -->
+    <header class="header_section">
+      <div class="container">
+        <nav class="navbar navbar-expand-lg custom_nav-container">
+          <a class="navbar-brand" href="{{ url_for('page.index') }}">
+            <span>Ohmeals</span>
+          </a>
+
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class=""> </span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mx-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.index') }}">Accueil</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('menu.menu') }}">Menu</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('page.about') }}">À propos</a>
+              </li>
+            </ul>
+            <div class="user_option">
+              <a href="{{ url_for('auth.login') }}" class="user_link active">
+                <i class="fa fa-user" aria-hidden="true"></i>
+              </a>
+              <a class="cart_link" href="{{ url_for('menu.book') }}" style="position: relative">
+                <i class="fa fa-shopping-cart"></i>
+                <span id="cart-count" style="
+                      position: absolute;
+                      top: -8px;
+                      right: -8px;
+                      background: var(--primary);
+                      color: #fff;
+                      padding: 2px 6px;
+                      border-radius: 50%;
+                      font-size: 0.7rem;
+                      display: none;
+                    ">0</span>
+              </a>
+              <a href="{{ url_for('menu.book') }}" class="order_online">Commander</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!-- end header section -->
+  </div>
+
+  <!-- login section -->
+  <section class="login_section layout_padding">
+    <div class="container">
+      <div class="login-box mx-auto">
+        <form method="POST" id="loginForm" action="{{ url_for('auth.login') }}">
+          <h2>Connexion</h2>
+
+          <!-- USERNAME -->
+          <label class="form-label">Nom d'utilisateur</label>
+          <input type="text" name="username" class="form-control mb-3" placeholder="Nom d'utilisateur"
+            autocomplete="off" required />
+
+          <!-- PASSWORD -->
+          <label class="form-label">Mot de passe</label>
+          <div class="password-wrapper">
+            <input type="password" name="password" class="form-control mb-3" required id="password"
+              autocomplete="new-password" placeholder="Mot de passe" />
+            <span class="eye-toggle" id="togglePassword">
+              <i class="bi bi-eye"></i>
+            </span>
+          </div>
+
+          <div id="passwordError" class="text-danger"></div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="" id="rememberMe" checked />
+            <label class="form-check-label" for="rememberMe"> Se souvenir de moi </label>
+          </div>
+
+          <a href="{{ url_for('auth.forgot_password') }}" class="forgot-pass">Mot de passe oublié ?</a>
+
+          <!-- SUBMIT -->
+          <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+
+          <!-- ERROR -->
+          {% if error %}
+          <p class="text-danger text-center mt-3">{{ error }}</p>
+          {% endif %}
+        </form>
+      </div> <!-- login-box -->
+    </div> <!-- container -->
+  </section> <!-- login_section -->
+
+  <!-- footer section -->
+  {% include 'includes/footer.html' %}
+  <!-- JS Validation -->
+  <script>
+    const form = document.getElementById("loginForm");
+    const password = document.getElementById("password");
+    const passwordError = document.getElementById("passwordError");
+    const togglePassword = document.getElementById("togglePassword");
+
+    /* =========================
+   Nettoyage au chargement
+   ========================= */
+    window.addEventListener("load", () => {
+      form.reset(); // champs vides
+      password.type = "password";
+      passwordError.textContent = "";
+      togglePassword.querySelector("i").className = "bi bi-eye";
+    });
+
+    /* =========================
+       Oeil : afficher / masquer
+       ========================= */
+    togglePassword.addEventListener("click", () => {
+      const icon = togglePassword.querySelector("i");
+
+      if (password.type === "password") {
+        password.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      } else {
+        password.type = "password";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+      }
+    });
+
+    /* =========================
+       Validation du formulaire
+       ========================= */
+    form.addEventListener("submit", function (event) {
+      passwordError.textContent = ""; // Reset message
+      const pwd = password.value;
+
+      // Validation supprimée pour éviter de bloquer les anciens mots de passe
+      // Le backend gère l'authentification
+
+      // Effacer le mot de passe après submit
+      setTimeout(() => {
+        password.value = "";
+        password.type = "password";
+        togglePassword.querySelector("i").className = "bi bi-eye";
+      }, 100);
+    });
+  </script>
+
+  <!-- jQery -->
+  <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+  <!-- popper js -->
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <!-- bootstrap js -->
+  <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+  <!-- owl slider -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+  <!-- isotope js -->
+  <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
+  <!-- nice select -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
+  <!-- custom js -->
+  <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+
+  <!-- Floating Cart -->
+  <a href="{{ url_for('menu.book') }}" class="floating-cart">
+    <i class="fa fa-shopping-cart"></i>
+    <span id="cart-count" style="display: none;">0</span>
+  </a>
+
+  <!-- Cart Logic -->
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+</body>
+
+</html>

@@ -7,7 +7,7 @@ from sqlalchemy import func, cast, Date
 
 from app.extensions import db
 from app.models.order import Order
-from app.models.expense import Expense
+from app.models.expense import Expense, EXPENSE_CATEGORIES
 
 
 # Status that counts as "paid" revenue
@@ -20,8 +20,8 @@ def get_revenue(start_date, end_date):
         func.coalesce(func.sum(Order.total_price), 0)
     ).filter(
         Order.status == PAID_STATUS,
-        cast(Order.created_at, Date) >= start_date,
-        cast(Order.created_at, Date) <= end_date
+        func.date(Order.created_at) >= start_date,
+        func.date(Order.created_at) <= end_date
     ).scalar()
     return float(result)
 
@@ -98,8 +98,8 @@ def get_revenue_chart_data(start_date, end_date, granularity='daily'):
         func.coalesce(func.sum(Order.total_price), 0).label('total')
     ).filter(
         Order.status == PAID_STATUS,
-        cast(Order.created_at, Date) >= start_date,
-        cast(Order.created_at, Date) <= end_date
+        func.date(Order.created_at) >= start_date,
+        func.date(Order.created_at) <= end_date
     ).group_by(date_label).order_by(date_label).all()
 
     return [{'label': r.label, 'total': round(float(r.total), 2)} for r in results]
@@ -150,8 +150,8 @@ def get_transactions_list(start_date, end_date, page=1, per_page=20):
     # 1. Fetch Orders in range
     orders_query = Order.query.filter(
         Order.status == PAID_STATUS,
-        cast(Order.created_at, Date) >= start_date,
-        cast(Order.created_at, Date) <= end_date
+        func.date(Order.created_at) >= start_date,
+        func.date(Order.created_at) <= end_date
     )
 
     # 2. Fetch Expenses in range
@@ -207,8 +207,8 @@ def get_export_data(start_date, end_date):
     # Revenue entries (delivered orders)
     orders = Order.query.filter(
         Order.status == PAID_STATUS,
-        cast(Order.created_at, Date) >= start_date,
-        cast(Order.created_at, Date) <= end_date
+        func.date(Order.created_at) >= start_date,
+        func.date(Order.created_at) <= end_date
     ).order_by(Order.created_at).all()
 
     # Expense entries
@@ -238,3 +238,77 @@ def get_export_data(start_date, end_date):
         })
 
     return revenue_rows + expense_rows
+
+def create_expense(data):
+    """Create a new expense."""
+    if not data.get('title') or not data.get('amount') or not data.get('category'):
+        raise ValueError('Titre, montant et catégorie sont requis')
+
+    if data['category'] not in EXPENSE_CATEGORIES:
+        raise ValueError(f'Catégorie invalide. Choix: {", ".join(EXPENSE_CATEGORIES)}')
+
+    try:
+        amount = float(data['amount'])
+        if amount <= 0:
+            raise ValueError('Le montant doit être positif')
+    except (ValueError, TypeError):
+        raise ValueError('Montant invalide')
+
+    expense_date = date.today()
+    if data.get('date'):
+        try:
+            expense_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        except ValueError:
+            raise ValueError('Format de date invalide (YYYY-MM-DD)')
+
+    expense = Expense(
+        title=data['title'].strip(),
+        category=data['category'],
+        amount=amount,
+        date=expense_date,
+        notes=data.get('notes', '').strip() or None
+    )
+
+    db.session.add(expense)
+    db.session.commit()
+    return expense
+
+def update_expense(expense_id, data):
+    """Update an existing expense."""
+    expense = Expense.query.get_or_404(expense_id)
+
+    if data.get('title'):
+        expense.title = data['title'].strip()
+
+    if data.get('category'):
+        if data['category'] not in EXPENSE_CATEGORIES:
+            raise ValueError('Catégorie invalide')
+        expense.category = data['category']
+
+    if data.get('amount') is not None:
+        try:
+            amount = float(data['amount'])
+            if amount <= 0:
+                raise ValueError('Le montant doit être positif')
+            expense.amount = amount
+        except (ValueError, TypeError):
+            raise ValueError('Montant invalide')
+
+    if data.get('date'):
+        try:
+            expense.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        except ValueError:
+            raise ValueError('Format de date invalide')
+
+    if 'notes' in data:
+        expense.notes = data['notes'].strip() or None
+
+    db.session.commit()
+    return expense
+
+def delete_expense(expense_id):
+    """Delete an expense."""
+    expense = Expense.query.get_or_404(expense_id)
+    db.session.delete(expense)
+    db.session.commit()
+    return True

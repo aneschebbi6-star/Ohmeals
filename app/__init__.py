@@ -2,8 +2,15 @@
 OHMEALS Flask Application Factory.
 Creates and configures the Flask app.
 """
+import os
 from flask import Flask
 from werkzeug.security import generate_password_hash
+try:
+    from dotenv import load_dotenv
+    # Load environment variables from .env file
+    load_dotenv()
+except ImportError:
+    print("TIP: 'python-dotenv' not installed. Environment variables from .env will not be loaded automatically.")
 
 from app.config import config
 from app.extensions import db, login_manager, mail
@@ -11,11 +18,7 @@ from app.extensions import db, login_manager, mail
 
 def create_app(config_name='default'):
     """Application factory pattern."""
-    app = Flask(
-        __name__,
-        template_folder='../templates',
-        static_folder='../static'
-    )
+    app = Flask(__name__)
 
     # Load configuration
     app.config.from_object(config[config_name])
@@ -69,20 +72,25 @@ def create_app(config_name='default'):
     with app.app_context():
         db.create_all()
 
-        # Create default admin if table is empty
+        # Create default admin if table is empty and env vars are present
+        admin_pass = os.environ.get('ADMIN_PASSWORD')
         if not Admin.query.first():
-            import os
-            admin_user = os.environ.get('ADMIN_USER', 'admin')
-            admin_email = os.environ.get('ADMIN_EMAIL', 'admin@ohmeals.com')
-            admin_pass = os.environ.get('ADMIN_PASSWORD', 'OhMeals2024!')
-            
-            admin = Admin(
-                username=admin_user,
-                email=admin_email,
-                password=generate_password_hash(admin_pass),
-                must_change_password=True  # Force password change
-            )
-            db.session.add(admin)
-            db.session.commit()
+            if not admin_pass:
+                # Optionally log a warning or raise an error in production
+                # For now, we'll just skip creation if password is missing
+                print("WARNING: ADMIN_PASSWORD not set. Skip creating default admin.")
+            else:
+                admin_user = os.environ.get('ADMIN_USER', 'admin')
+                admin_email = os.environ.get('ADMIN_EMAIL', 'admin@ohmeals.com')
+                
+                admin = Admin(
+                    username=admin_user,
+                    email=admin_email,
+                    password=generate_password_hash(admin_pass),
+                    must_change_password=True  # Force password change
+                )
+                db.session.add(admin)
+                db.session.commit()
+                print(f"Default admin '{admin_user}' created successfully.")
 
     return app

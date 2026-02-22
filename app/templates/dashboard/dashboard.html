@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OHMEALS - Admin Dashboard (Flask + React)</title>
+  <title>Ohmeals - Admin Dashboard</title>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,21 +16,24 @@
   <style>
     /* --- STYLE ORIGINAL CONSERVÉ & AMÉLIORÉ --- */
     :root {
-      /* PALETTE NOIR & JAUNE */
-      --bg-main: #121212;
-      --bg-card: #1e1e1e;
-      --bg-hover: #2a2a2a;
-      --accent: #cba719;
-      /* Jaune Moutarde */
-      --accent-hover: #e5bd24;
-      --accent-glow: rgba(203, 167, 25, 0.3);
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --border: #374151;
-      --danger: #ef4444;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --info: #3b82f6;
+      /* PALETTE PRESTIGE (Synchronisée) */
+      --bg-main: #0F1115;
+      /* Obsidian Deep */
+      --bg-card: #1A1D23;
+      /* Obsidian Surface */
+      --bg-hover: #21252C;
+      --accent: #B68D40;
+      /* Heritage Gold */
+      --accent-hover: #9A7532;
+      --accent-glow: rgba(182, 141, 64, 0.2);
+      --text-main: #F3F4F6;
+      --text-muted: #9BA3AF;
+      --border: rgba(182, 141, 64, 0.1);
+      /* Subtle Gold border */
+      --danger: #EF4444;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --info: #3B82F6;
     }
 
     * {
@@ -971,7 +974,7 @@
       const getStatusBadge = (status) => {
         let icon = "fa-clock";
         let cls = "warning";
-        if (status === "Livré") { icon = "fa-check"; cls = "success"; }
+        if (status === "Livrée") { icon = "fa-check"; cls = "success"; }
         if (status === "En préparation") { icon = "fa-fire"; cls = "primary"; } // Jaune
         if (status === "Annulé") { icon = "fa-ban"; cls = "danger"; }
 
@@ -1371,7 +1374,7 @@
                 </div>
                 <div className="mb-20"><label>Statut</label>
                   <select className="input-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                    <option value="En attente">En attente</option><option value="En préparation">En préparation</option><option value="Livré">Livré</option><option value="Annulé">Annulé</option>
+                    <option value="En attente">En attente</option><option value="En préparation">En préparation</option><option value="Livrée">Livrée</option><option value="Annulé">Annulé</option>
                   </select>
                 </div>
                 <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>{editingOrder ? "Mettre à jour" : "Créer"}</button>
@@ -1877,8 +1880,8 @@
                   {[
                     { label: 'Commandes (Total)', val: (stats ? stats.total_orders : 0), color: 'var(--accent)', icon: 'fa-shopping-basket' },
                     { label: "Chiffre d'Affaires (Total)", val: (stats ? stats.total_revenue : 0).toFixed(2) + ' DT', color: 'var(--success)', icon: 'fa-wallet' },
-                    { label: 'Bénéfice Net (Ce Mois)', val: (stats ? stats.total_net_profit : 0).toFixed(2) + ' DT', color: 'var(--info)', icon: 'fa-balance-scale' },
-                    { label: 'Produits Actifs', val: products.filter(p => p.is_active).length, color: 'var(--warning)', icon: 'fa-box' }
+                    { label: 'Bénéfice (Ce Mois)', val: (stats ? stats.month_profit : 0).toFixed(2) + ' DT', color: 'var(--info)', icon: 'fa-balance-scale' },
+                    { label: "Bénéfice (Aujourd'hui)", val: (stats ? stats.today_profit : 0).toFixed(2) + ' DT', color: 'var(--primary)', icon: 'fa-chart-line' }
                   ].map((stat, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${stat.color}`, display: 'flex', alignItems: 'center', gap: '20px' }}>
                       <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: `${stat.color}20`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
@@ -1940,7 +1943,7 @@
 
       const getStatusBadge = (status) => {
         let icon = "fa-clock"; let cls = "warning";
-        if (status === "Livré") { icon = "fa-check"; cls = "success"; } if (status === "En préparation") { icon = "fa-fire"; cls = "primary"; } if (status === "Annulé") { icon = "fa-ban"; cls = "danger"; }
+        if (status === "Livrée") { icon = "fa-check"; cls = "success"; } if (status === "En préparation") { icon = "fa-fire"; cls = "primary"; } if (status === "Annulé") { icon = "fa-ban"; cls = "danger"; }
         return <span className={`badge ${cls}`}><i className={`fas ${icon}`}></i> {status}</span>;
       }
 
