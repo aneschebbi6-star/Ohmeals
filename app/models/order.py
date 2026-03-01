@@ -2,6 +2,7 @@
 Order and OrderItem models for OHMEALS.
 Handles customer orders with delivery information.
 """
+from datetime import datetime
 from app.extensions import db
 
 
@@ -30,7 +31,7 @@ class Order(db.Model):
     # Status: 'En attente', 'En préparation', 'En livraison', 'Livrée', 'Annulée'
     status = db.Column(db.String(50), default='En attente')
     
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relationship to order items
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')

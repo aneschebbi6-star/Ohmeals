@@ -11,12 +11,18 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Forum&family=Outfit:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
 
   <style>
     /* --- STYLE ORIGINAL CONSERVÉ & AMÉLIORÉ --- */
     :root {
-      /* PALETTE PRESTIGE (Synchronisée) */
+      /* PALETTE PRESTIGE (Synchronisée avec le site) */
+      --primary: #B68D40;
+      /* Royal Gold / Safran */
+      --primary-hover: #9A7532;
+      --primary-glow: rgba(182, 141, 64, 0.2);
       --bg-main: #0F1115;
       /* Obsidian Deep */
       --bg-card: #1A1D23;
@@ -32,7 +38,7 @@
       /* Subtle Gold border */
       --danger: #EF4444;
       --success: #10B981;
-      --warning: #F59E0B;
+      --warning: #b98937;
       --info: #3B82F6;
     }
 
@@ -43,11 +49,20 @@
     }
 
     body {
-      font-family: "Inter", sans-serif;
+      font-family: "Outfit", sans-serif;
       background-color: var(--bg-main);
       color: var(--text-main);
       height: 100vh;
       overflow: hidden;
+      line-height: 1.6;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Forum', serif;
+      font-weight: 400;
+      letter-spacing: 1px;
     }
 
     /* LAYOUT */
@@ -91,6 +106,13 @@
       font-size: 1.5rem;
     }
 
+    .logo-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
     .nav-item {
       padding: 12px 24px;
       cursor: pointer;
@@ -99,10 +121,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       border-left: 3px solid transparent;
       text-decoration: none;
       margin-bottom: 4px;
+      font-weight: 500;
     }
 
     .nav-item:hover {
@@ -240,6 +263,18 @@
     .btn-danger:hover {
       background-color: var(--danger);
       color: white;
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      color: var(--text-main);
+      border-color: var(--accent);
+      background-color: rgba(182, 141, 64, 0.1);
     }
 
     .btn-icon {
@@ -490,6 +525,7 @@
       const options = {
         method,
         headers: { "Content-Type": "application/json" },
+        cache: 'no-store',
       };
       if (body) options.body = JSON.stringify(body);
 
@@ -524,7 +560,7 @@
         <div className="sidebar">
           <div className="logo-area">
             <i className="fas fa-utensils logo-icon"></i>
-            <span>OHMEALS</span>
+            <span className="logo-text">Ohmeals</span>
           </div>
           <nav>
             {/* ACCUEIL : Uniquement l'icône Maison */}
@@ -1527,7 +1563,7 @@
               <div><label>Facebook URL</label><input className="input-control" value={settings.facebook_url || ""} onChange={e => handleChange("facebook_url", e.target.value)} /></div>
               <div><label>Twitter URL</label><input className="input-control" value={settings.twitter_url || ""} onChange={e => handleChange("twitter_url", e.target.value)} /></div>
               <div><label>Instagram URL</label><input className="input-control" value={settings.instagram_url || ""} onChange={e => handleChange("instagram_url", e.target.value)} /></div>
-              <div><label>LinkedIn URL</label><input className="input-control" value={settings.linkedin_url || ""} onChange={e => handleChange("linkedin_url", e.target.value)} /></div>
+              <div><label>TikTok URL</label><input className="input-control" value={settings.tiktok_url || ""} onChange={e => handleChange("tiktok_url", e.target.value)} /></div>
 
               <div style={{ gridColumn: '1 / -1', marginTop: '20px' }}>
                 <button type="submit" className="btn btn-primary" style={{ padding: '12px 30px' }}><i className="fas fa-save"></i> Sauvegarder les modifications</button>
@@ -1566,12 +1602,32 @@
       const revenueChartInstance = React.useRef(null);
       const expenseChartInstance = React.useRef(null);
 
+      const getPeriodDates = (p) => {
+        const today = new Date();
+        const fmt = (d) => d.toISOString().split('T')[0];
+        if (p === 'today') return { start: fmt(today), end: fmt(today) };
+        if (p === 'week') {
+          const monday = new Date(today);
+          monday.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+          return { start: fmt(monday), end: fmt(today) };
+        }
+        if (p === 'year') {
+          const firstJan = new Date(today.getFullYear(), 0, 1);
+          return { start: fmt(firstJan), end: fmt(today) };
+        }
+        // month
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        return { start: fmt(firstDay), end: fmt(today) };
+      };
+
       const fetchData = async () => {
         setLoadingAcc(true);
+        const dates = getPeriodDates(period);
+        const granularity = period === 'year' ? 'monthly' : period === 'today' ? 'hourly' : 'daily';
         const [sumRes, revRes, expChartRes, transListRes, catRes] = await Promise.all([
           apiRequest(`/accounting/summary?period=${period}`),
-          apiRequest(`/accounting/revenue-chart?granularity=${period === 'today' ? 'daily' : period === 'week' ? 'daily' : 'daily'}`),
-          apiRequest('/accounting/expenses-chart'),
+          apiRequest(`/accounting/revenue-chart?start=${dates.start}&end=${dates.end}&granularity=${granularity}`),
+          apiRequest(`/accounting/expenses-chart?start=${dates.start}&end=${dates.end}`),
           apiRequest(`/accounting/transactions?period=${period}`),
           apiRequest('/accounting/categories')
         ]);
@@ -1590,32 +1646,57 @@
 
       // Revenue Line Chart
       useEffect(() => {
-        if (!revenueChartRef.current || revenueData.length === 0) return;
-        if (revenueChartInstance.current) revenueChartInstance.current.destroy();
-        revenueChartInstance.current = new Chart(revenueChartRef.current, {
-          type: 'line',
-          data: {
-            labels: revenueData.map(d => d.label),
-            datasets: [{ label: 'Revenus (DT)', data: revenueData.map(d => d.total), borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#2ecc71' }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#aaa' } }, x: { grid: { display: false }, ticks: { color: '#aaa' } } }, plugins: { legend: { labels: { color: '#ccc' } } } }
-        });
-        return () => { if (revenueChartInstance.current) revenueChartInstance.current.destroy(); };
+        if (!revenueChartRef.current) return;
+        const timer = setTimeout(() => {
+          if (!revenueChartRef.current) return;
+          if (revenueChartInstance.current) revenueChartInstance.current.destroy();
+          const hasData = revenueData.length > 0;
+          revenueChartInstance.current = new Chart(revenueChartRef.current, {
+            type: 'line',
+            data: {
+              labels: hasData ? revenueData.map(d => d.label) : ['Aucun revenu'],
+              datasets: [{
+                label: 'Revenus (DT)',
+                data: hasData ? revenueData.map(d => d.total) : [0],
+                borderColor: hasData ? '#2ecc71' : '#555',
+                backgroundColor: hasData ? 'rgba(46,204,113,0.1)' : 'rgba(255,255,255,0.05)',
+                fill: true, tension: 0.4, pointRadius: 4,
+                pointBackgroundColor: hasData ? '#2ecc71' : '#555'
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9BA3AF' } }, x: { grid: { display: false }, ticks: { color: '#9BA3AF' } } }, plugins: { legend: { labels: { color: '#9BA3AF', font: { family: 'Outfit' } } } } }
+          });
+        }, 150);
+        return () => {
+          clearTimeout(timer);
+          if (revenueChartInstance.current) revenueChartInstance.current.destroy();
+        };
       }, [revenueData]);
 
       // Expenses Pie Chart
       useEffect(() => {
-        if (!expenseChartRef.current || expensesChart.length === 0) return;
-        if (expenseChartInstance.current) expenseChartInstance.current.destroy();
-        expenseChartInstance.current = new Chart(expenseChartRef.current, {
-          type: 'doughnut',
-          data: {
-            labels: expensesChart.map(d => CATEGORY_LABELS[d.category] || d.category),
-            datasets: [{ data: expensesChart.map(d => d.total), backgroundColor: expensesChart.map(d => CATEGORY_COLORS[d.category] || '#95a5a6'), borderWidth: 0 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#ccc', padding: 15, usePointStyle: true } } } }
-        });
-        return () => { if (expenseChartInstance.current) expenseChartInstance.current.destroy(); };
+        if (!expenseChartRef.current) return;
+        const timer = setTimeout(() => {
+          if (!expenseChartRef.current) return;
+          if (expenseChartInstance.current) expenseChartInstance.current.destroy();
+          const hasData = expensesChart.length > 0;
+          expenseChartInstance.current = new Chart(expenseChartRef.current, {
+            type: 'doughnut',
+            data: {
+              labels: hasData ? expensesChart.map(d => CATEGORY_LABELS[d.category] || d.category) : ['Aucune dépense'],
+              datasets: [{
+                data: hasData ? expensesChart.map(d => d.total) : [1],
+                backgroundColor: hasData ? expensesChart.map(d => CATEGORY_COLORS[d.category] || '#95a5a6') : ['rgba(255,255,255,0.05)'],
+                borderWidth: 0
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9BA3AF', font: { family: 'Outfit' }, padding: 15, usePointStyle: true } }, tooltip: { filter: () => hasData } }, cutout: '75%' }
+          });
+        }, 150);
+        return () => {
+          clearTimeout(timer);
+          if (expenseChartInstance.current) expenseChartInstance.current.destroy();
+        };
       }, [expensesChart]);
 
       const handleSubmit = async (e) => {
@@ -1631,7 +1712,9 @@
         if (res) {
           if (addToast) addToast(editingExpense ? 'Dépense modifiée' : 'Dépense ajoutée', 'success');
           setShowModal(false); setEditingExpense(null);
-          setFormData({ title: '', category: 'ingredients', amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+          const todayLocal = new Date();
+          const localDate = new Date(todayLocal.getTime() - (todayLocal.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+          setFormData({ title: '', category: 'ingredients', amount: '', date: localDate, notes: '' });
           fetchData();
         }
       };
@@ -1643,14 +1726,17 @@
       };
 
       const openEdit = (exp) => {
-        setEditingExpense(exp);
+        const cleanId = typeof exp.id === 'string' ? parseInt(exp.id.replace('expense_', '')) : exp.id;
+        setEditingExpense({ ...exp, id: cleanId });
         setFormData({ title: exp.title, category: exp.category, amount: exp.amount.toString(), date: exp.date, notes: exp.notes || '' });
         setShowModal(true);
       };
 
       const openAdd = () => {
         setEditingExpense(null);
-        setFormData({ title: '', category: 'ingredients', amount: '', date: new Date().toISOString().split('T')[0], notes: '' });
+        const todayLocal = new Date();
+        const localDate = new Date(todayLocal.getTime() - (todayLocal.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        setFormData({ title: '', category: 'ingredients', amount: '', date: localDate, notes: '' });
         setShowModal(true);
       };
 
@@ -1667,10 +1753,10 @@
           <div className="flex-between" style={{ marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}><i className="fas fa-calculator" style={{ color: 'var(--accent)', marginRight: '10px' }}></i>Comptabilité</h2>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {['today', 'week', 'month'].map(p => (
+              {['today', 'week', 'month', 'year'].map(p => (
                 <button key={p} onClick={() => setPeriod(p)} className={`btn ${period === p ? 'btn-primary' : 'btn-secondary'}`}
                   style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-                  {p === 'today' ? "Aujourd'hui" : p === 'week' ? 'Semaine' : 'Mois'}
+                  {p === 'today' ? "Aujourd'hui" : p === 'week' ? 'Semaine' : p === 'month' ? 'Mois' : 'Année'}
                 </button>
               ))}
               <button onClick={exportCSV} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
@@ -1835,37 +1921,40 @@
       // Chart Effect
       useEffect(() => {
         if (activeView === 'dashboard' && stats && stats.chart_data && !loading) {
-          const ctx = document.getElementById('salesChart');
-          if (ctx) {
-            // Destroy existing chart if needed (simple way: check simple instance or just render)
-            // In React strict mode or re-renders, this might duplicate, but basic implementation:
-            if (window.myChart instanceof Chart) window.myChart.destroy();
+          // Delay to ensure React has flushed the DOM
+          const timer = setTimeout(() => {
+            const ctx = document.getElementById('salesChart');
+            if (ctx) {
+              if (window.myChart instanceof Chart) window.myChart.destroy();
 
-            window.myChart = new Chart(ctx, {
-              type: 'bar',
-              data: {
-                labels: stats.chart_data.map(d => d.date),
-                datasets: [{
-                  label: 'Revenus (DT)',
-                  data: stats.chart_data.map(d => d.total),
-                  backgroundColor: 'rgba(203, 167, 25, 0.5)', // var(--accent)
-                  borderColor: 'rgba(203, 167, 25, 1)',
-                  borderWidth: 1
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: { beginAtZero: true, grid: { color: '#333' } },
-                  x: { grid: { display: false } }
+              window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: stats.chart_data.map(d => d.date),
+                  datasets: [{
+                    label: 'Revenus (DT)',
+                    data: stats.chart_data.map(d => d.total),
+                    backgroundColor: 'rgba(182, 141, 64, 0.5)',
+                    borderColor: 'rgba(182, 141, 64, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6
+                  }]
                 },
-                plugins: {
-                  legend: { labels: { color: '#aaa' } }
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9BA3AF' } },
+                    x: { grid: { display: false }, ticks: { color: '#9BA3AF' } }
+                  },
+                  plugins: {
+                    legend: { labels: { color: '#9BA3AF', font: { family: 'Outfit' } } }
+                  }
                 }
-              }
-            });
-          }
+              });
+            }
+          }, 150);
+          return () => clearTimeout(timer);
         }
       }, [activeView, stats, loading]);
 
@@ -1952,7 +2041,7 @@
           <Sidebar activeView={activeView} setView={setActiveView} />
           <div className="main-content">
             <header className="header">
-              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>OHMEALS <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>Admin</span></div>
+              <div style={{ fontWeight: 600, fontSize: '1.1rem' }}><span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.3rem' }}>Ohmeals</span> <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>Admin</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>{user.username}</div>

@@ -195,6 +195,10 @@ window.openModal = function (productId) {
   state.modal.qty = 1;
   state.modal.selectedVariant = product.variants?.find(v => v.is_default) || product.variants?.[0] || null;
 
+  // Reset UI quantity back to 1
+  const qtyEl = document.getElementById('pmQtyValue');
+  if (qtyEl) qtyEl.innerText = 1;
+
   renderModalContent();
   const overlay = document.getElementById('productModalOverlay');
   if (overlay) {

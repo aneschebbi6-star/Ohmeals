@@ -32,8 +32,7 @@ ALLOWED_SETTINGS_KEYS = {
     "address",
     "facebook_url",
     "twitter_url",
-    "instagram_url",
-    "linkedin_url",
+    "tiktok_url",
 }
 
 

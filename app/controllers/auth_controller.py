@@ -109,12 +109,16 @@ def forgot_password():
             user.last_code_time = now
             db.session.commit()
 
-            msg = Message(
-                subject="Code de réinitialisation",
-                recipients=[email],
-                body=f"Bonjour {user.username},\n\nVotre code de réinitialisation est : {code_generated}\n\nMerci."
-            )
-            mail.send(msg)
+            try:
+                msg = Message(
+                    subject="Code de réinitialisation",
+                    recipients=[email],
+                    body=f"Bonjour {user.username},\n\nVotre code de réinitialisation est : {code_generated}\n\nMerci."
+                )
+                mail.send(msg)
+                print(f"Email envoyé avec succès à {email}")
+            except Exception as e:
+                print(f"Erreur d'envoi d'email à {email}: {str(e)}")
             return "CODE_SENT"
 
         # Step 2: Verify code

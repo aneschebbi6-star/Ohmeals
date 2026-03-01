@@ -58,6 +58,9 @@ def get_financial_summary(period='month'):
     elif period == 'week':
         start_date = today - timedelta(days=today.weekday())  # Monday
         end_date = today
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today
     else:  # month
         start_date = today.replace(day=1)
         end_date = today
@@ -81,16 +84,16 @@ def get_financial_summary(period='month'):
 def get_revenue_chart_data(start_date, end_date, granularity='daily'):
     """
     Get revenue data grouped by date for line chart.
-    granularity: 'daily', 'weekly', 'monthly'
+    granularity: 'hourly', 'daily', 'weekly', 'monthly'
+    Zero-fills missing dates/times for a continuous line chart.
     """
     if granularity == 'monthly':
-        # Group by year-month
         date_label = func.strftime('%Y-%m', Order.created_at)
     elif granularity == 'weekly':
-        # Group by year-week
         date_label = func.strftime('%Y-W%W', Order.created_at)
-    else:
-        # Group by day
+    elif granularity == 'hourly':
+        date_label = func.strftime('%H:00', Order.created_at)
+    else: # daily
         date_label = func.strftime('%Y-%m-%d', Order.created_at)
 
     results = db.session.query(
@@ -102,7 +105,31 @@ def get_revenue_chart_data(start_date, end_date, granularity='daily'):
         func.date(Order.created_at) <= end_date
     ).group_by(date_label).order_by(date_label).all()
 
-    return [{'label': r.label, 'total': round(float(r.total), 2)} for r in results]
+    revenue_map = {r.label: float(r.total) for r in results}
+    filled_data = []
+
+    if granularity == 'monthly':
+        # Fill from Jan to Dec of the start_date's year
+        year = start_date.year
+        for month in range(1, 13):
+            label = f"{year}-{month:02d}"
+            filled_data.append({'label': label, 'total': round(revenue_map.get(label, 0.0), 2)})
+            
+    elif granularity == 'hourly':
+        # Fill 24 hours: 00:00 to 23:00
+        for h in range(24):
+            label = f"{h:02d}:00"
+            filled_data.append({'label': label, 'total': round(revenue_map.get(label, 0.0), 2)})
+            
+    else: # daily
+        # Fill every day between start_date and end_date
+        current_date = start_date
+        while current_date <= end_date:
+            label = current_date.strftime('%Y-%m-%d')
+            filled_data.append({'label': label, 'total': round(revenue_map.get(label, 0.0), 2)})
+            current_date += timedelta(days=1)
+
+    return filled_data
 
 
 def get_expenses_by_category(start_date, end_date):

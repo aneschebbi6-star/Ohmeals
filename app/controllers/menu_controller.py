@@ -1,7 +1,11 @@
 from flask import Blueprint, render_template, request, jsonify
 from app.models.product import Product, ProductVariant
 from app.models.order import Order, OrderItem
-from app.extensions import db
+from app.extensions import db, mail
+from flask_mail import Message
+from app.models.admin import Admin
+from threading import Thread
+from flask import current_app
 
 menu_bp = Blueprint('menu', __name__)
 
@@ -106,6 +110,37 @@ def create_order():
             db.session.add(order_item)
         
         db.session.commit()
+        
+        # ---------------------------------------------------------
+        # Send Email Notification to All Administrators
+        # ---------------------------------------------------------
+        try:
+            admins = Admin.query.all()
+            admin_emails = [admin.email for admin in admins if admin.email]
+            
+            if admin_emails:
+                msg = Message(
+                    subject=f"Nouvelle commande Ohmeals #{new_order.id}",
+                    recipients=admin_emails,
+                    body=f"Une nouvelle commande a été passée par {new_order.customer_name}.\n"
+                         f"Téléphone: {new_order.customer_phone}\n"
+                         f"Adresse: {new_order.delivery_address}\n"
+                         f"Total: {new_order.total_price} DT\n\n"
+                         f"Connectez-vous au dashboard pour voir les détails de la commande."
+                )
+                
+                def send_async_email(app, msg):
+                    with app.app_context():
+                        try:
+                            mail.send(msg)
+                        except Exception as e:
+                            print(f"Erreur lors de l'envoi de l'email: {str(e)}")
+                            
+                Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+        except Exception as e:
+            print(f"Erreur préparation email: {str(e)}")
+            # On ne bloque pas la commande si l'envoi de l'email échoue
+        # ---------------------------------------------------------
         
         return jsonify({
             'success': True,

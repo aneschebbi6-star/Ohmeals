@@ -35,11 +35,13 @@ accounting_bp = Blueprint('accounting', __name__, url_prefix='/api/accounting')
 def summary():
     """Get financial summary for a period (today, week, month)."""
     period = request.args.get('period', 'month')
-    if period not in ('today', 'week', 'month'):
+    if period not in ('today', 'week', 'month', 'year'):
         period = 'month'
 
     data = get_financial_summary(period)
-    return jsonify(data)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 # ============================================
@@ -66,7 +68,9 @@ def revenue_chart():
         end_date = today
 
     data = get_revenue_chart_data(start_date, end_date, granularity)
-    return jsonify(data)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 @accounting_bp.route('/expenses-chart', methods=['GET'])
@@ -88,7 +92,9 @@ def expenses_chart():
         end_date = today
 
     data = get_expenses_by_category(start_date, end_date)
-    return jsonify(data)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 # ============================================
@@ -126,12 +132,17 @@ def list_transactions():
     elif period == 'week':
         start_date = today - timedelta(days=today.weekday())
         end_date = today
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)
+        end_date = today
     else:  # month
         start_date = today.replace(day=1)
         end_date = today
 
     data = get_transactions_list(start_date, end_date, page, per_page)
-    return jsonify(data)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 @accounting_bp.route('/expenses', methods=['POST'])
