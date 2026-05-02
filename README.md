@@ -158,7 +158,8 @@ id, order_id, product_id, quantity, unit, price
 acceuil
 
 ---
-<img width="1920" height="1080" alt="Capture d&#39;écran 2026-03-01 020630" src="https://github.com/user-attachments/assets/4ca11d92-b34b-4226-9802-c897d60681f3" />
+<img width="1920" height="1080" alt="Capture d&#39;écran 2026-03-11 232758" src="https://github.com/user-attachments/assets/08d0b1e3-806e-43a2-979f-fe57e89311f3" />
+
 
 dashboard
 ---
