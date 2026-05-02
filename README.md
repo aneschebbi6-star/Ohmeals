@@ -151,6 +151,19 @@ id, customer_name, customer_phone, customer_email, delivery_address, total_price
 ```
 id, order_id, product_id, quantity, unit, price
 ```
+---
+
+## image
+
+acceuil
+
+---
+<img width="1920" height="1080" alt="Capture d&#39;écran 2026-03-01 020630" src="https://github.com/user-attachments/assets/4ca11d92-b34b-4226-9802-c897d60681f3" />
+
+dashboard
+---
+<img width="1920" height="1080" alt="Capture d&#39;écran 2026-03-01 020709" src="https://github.com/user-attachments/assets/2f7a760b-a691-479e-8ed0-41dbfe755241" />
+
 
 ---
 
